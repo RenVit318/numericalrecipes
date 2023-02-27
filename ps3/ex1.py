@@ -64,22 +64,32 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
     if implicit_pivoting:
         row_max_inverse = determine_implicit_pivot_coeff(A)
 
+    # We need a way to make sure that we do not get stuck at a column where all of the elements
+    # below the diagonal are zero. In that case it is going to be impossible to get a proper pivot
+    # without messing up all of the work done in earlier columns
+    # Note all rows in each column that are zero
+    zero_elements = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
+    zero_elements.matrix[np.abs(A.matrix) > epsilon] = 1
+    #TODO: Use this matrix properly
+
     for i in range(A.num_columns):
         # A.matrix[i:, i] selects all elements on or below the diagonal
         if implicit_pivoting:
             pivot_candidates = A.matrix[i:,i] * row_max_inverse[i:]
         else:
             pivot_candidates = A.matrix[i:,i]
-        pivot_idx = i+np.argmax(pivot_candidates)
+        print(pivot_candidates)
+        pivot_idx = i+np.argmax(np.abs(pivot_candidates))
 
         # This stores i_max in A.row_order
         A.swap_rows(i, pivot_idx)
         diag_element = A.matrix[i,i] # Use to scale alpha factors
+        print(diag_element, A.matrix)
         for j in range(i, A.num_rows):
             element_value = A.matrix[j,i]
             element_value /= diag_element
             # Apply subsitution here!
-            
+        
    
 
     print(A.matrix, A.row_order)
