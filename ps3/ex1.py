@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.linalg import lu
 epsilon = 1e-10 # Numerical accuracy threshold
 
 class Matrix():
@@ -53,46 +54,6 @@ def determine_implicit_pivot_coeff(mat):
     return row_max_inverse
 
 
-def lu_decomposition(coefficients, implicit_pivoting=True):
-    """Decomposes a matrix into:
-        -L: A matrix with non-zero elements only in the lower-triangle, and ones on the diagonal
-        -U: A matrix with non-zero elements only in the upper-triangle, including the diagonal
-       These matrices are presented and stored into one. 
-       The decomposition is done using Crout's Algorithm 
-    """
-    A = Matrix(values=coefficients)
-    if implicit_pivoting:
-        row_max_inverse = determine_implicit_pivot_coeff(A)
-
-    # We need a way to make sure that we do not get stuck at a column where all of the elements
-    # below the diagonal are zero. In that case it is going to be impossible to get a proper pivot
-    # without messing up all of the work done in earlier columns
-    # Note all rows in each column that are zero
-    zero_elements = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
-    zero_elements.matrix[np.abs(A.matrix) > epsilon] = 1
-    #TODO: Use this matrix properly
-
-    for i in range(A.num_columns):
-        # A.matrix[i:, i] selects all elements on or below the diagonal
-        if implicit_pivoting:
-            pivot_candidates = A.matrix[i:,i] * row_max_inverse[i:]
-        else:
-            pivot_candidates = A.matrix[i:,i]
-        print(pivot_candidates)
-        pivot_idx = i+np.argmax(np.abs(pivot_candidates))
-
-        # This stores i_max in A.row_order
-        A.swap_rows(i, pivot_idx)
-        diag_element = A.matrix[i,i] # Use to scale alpha factors
-        print(diag_element, A.matrix)
-        for j in range(i, A.num_rows):
-            element_value = A.matrix[j,i]
-            element_value /= diag_element
-            # Apply subsitution here!
-        
-   
-
-    print(A.matrix, A.row_order)
 
 def gauss_jordan(coefficients, constraints, make_inverse=False):
     """Solves a set of linear equations using the Gauss Jordan method
@@ -144,10 +105,111 @@ def gauss_jordan(coefficients, constraints, make_inverse=False):
         raise ValueError('Calculated Solution is Incorrect')
 
 
+def lu_decomposition(coefficients, implicit_pivoting=True):
+    """Decomposes a matrix into:
+        -L: A matrix with non-zero elements only in the lower-triangle, and ones on the diagonal
+        -U: A matrix with non-zero elements only in the upper-triangle, including the diagonal
+       These matrices are presented and stored into one. 
+       The decomposition is done using Crout's Algorithm 
+    """
+    A = Matrix(values=coefficients)
+    if implicit_pivoting:
+        row_max_inverse = determine_implicit_pivot_coeff(A)
+
+    # We need a way to make sure that we do not get stuck at a column where all of the elements
+    # below the diagonal are zero. In that case it is going to be impossible to get a proper pivot
+    # without messing up all of the work done in earlier columns
+    # Note all rows in each column that are zero
+    #zero_elements = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
+    #zero_elements.matrix[np.abs(A.matrix) > epsilon] = 1
+    #TODO: Use this matrix properly
+    imax_ar = np.zeros(A.num_columns)
+    # First pivot the matrix
+    for i in range(A.num_columns):
+        # A.matrix[i:, i] selects all elements on or below the diagonal
+        if implicit_pivoting:
+            pivot_candidates = A.matrix[i:,i] * row_max_inverse[i:]
+        else:
+            pivot_candidates = A.matrix[i:,i]
+    
+        pivot_idx = i+np.argmax(np.abs(pivot_candidates))
+        imax_ar[i] = pivot_idx
+    print(imax_ar)
+
+    for i in range(A.num_columns):
+        # A.matrix[i:, i] selects all elements on or below the diagonal
+        diag_element = A.matrix[i,i] # Use to scale alpha factors
+
+        #for j in range(i+1, A.num_rows): # This leaves a zero at the end, not the best fix this!
+        #    A.matrix[j,i] /= diag_element
+        #    for k in range(i+1, j):
+        #        A.matrix[j,k] -= A.matrix[j,i]*A.matrix[i,k]
+        print(A.matrix)
+    print(imax_ar, A.row_order)
+    return A
+
+def solve_lineqs_lu(LU, b):
+    """"
+
+    """
+    x = Matrix(values=b)
+    # Begin by swapping the x's in the right order
+    x.matrix = x.matrix[LU.row_order]
+    print(x.matrix)
+    for i in range(1, x.num_rows):
+        x.matrix[i] -= np.sum(LU.matrix[i, :i] * x.matrix[:i])
+
+    #x.matrix[-1] = x.matrix[-1]/LU.matrix[-1, -1]
+    for i in range(x.num_rows-1, -1, -1):
+        x.matrix[i] = (x.matrix[i] - np.sum(LU.matrix[i, i+1:]*x.matrix[i+1:]))
+
+    return x
+        
+        
+
+def check_lu_decomposition_old(LU, A):
+    print("Starting LU Decomposition check")
+    L = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
+    U = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
+
+    for i in range(A.num_columns):
+        for j in range(A.num_rows):
+            if i == j:
+                L.matrix[j, i] = 1
+                U.matrix[j, i] = LU.matrix[j,i]
+            elif j > i:
+                L.matrix[j, i] = LU.matrix[j,i]
+            elif j < i:
+                U.matrix[j, i] = LU.matrix[j,i]
+
+    L_times_U = np.matmul(L.matrix, U.matrix)
+    for row in LU.row_order:
+        print(L_times_U[row])
+
+def matrix_vector_mul(mat, vec):
+    """Computes the product between a matrix of shape MxN and a vector of shape Nx1.
+
+    Inputs:
+        mat: ndarray of shape MxN
+        vec: ndarray of shape Nx1
+    
+    Outputs
+        res: The result of mat x vec, ndarray of shape Mx1
+
+    """
+    print(vec)
+    res = np.zeros_like(vec)
+    for i in range(mat.shape[0]):
+        for j in range(mat.shape[1]):
+            res[j] += mat[i, j] * vec[j]
+    return res
+    
+    
+
 def check_solution(A, x, b, epsilon=1e-10):
     """Checks a proposed solution to a system of linear equations by computing Ax - b and checking 
        if it is below some threshold"""
-    return np.abs(np.sum(A.dot(x) - b)) < epsilon
+    return np.abs(np.sum(matrix_vector_mul(A, x) - b)) < epsilon
 
 
 def test_linear_equation_solvers():
@@ -159,7 +221,18 @@ def test_linear_equation_solvers():
     constraints = np.array([2, 0, 1, 0, 0]) 
 
     #gj_solution = gauss_jordan(coefficients, constraints, make_inverse=True)
-    lu_decomposition(coefficients)
+    LU = lu_decomposition(coefficients, implicit_pivoting=True)
+    x = solve_lineqs_lu(LU, constraints)
+    print(matrix_vector_mul(coefficients,x.matrix))
+    print(check_solution(coefficients, x.matrix, constraints))
+    #check_lu_decomposition(LU, Matrix(coefficients))
+    #P, L, U = lu(coefficients)
+    return
+    print(f'True LU Decomposition:')
+    print(L)
+    print(U)
+    print(P)
+    print(LU.row_order)
     
 
 def main():

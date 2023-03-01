@@ -59,7 +59,6 @@ def bisection(x, y, t, M):
         min_idx = len(x) - M   
         max_idx = len(x) - 1
     else:
-        print(((M-2)//2))
         min_idx = int(adjacent_idxs[0] - np.floor((M-2)/2))
         max_idx = int(adjacent_idxs[1] + np.ceil((M-2)/2))
 
@@ -119,6 +118,7 @@ def poly_interpolator(xdata, ydata, t, M):
         t    : The points along the x-axis we want to interpolate, should always be provided as a 
                list or ndarray for indexing purposes
         M    : The order of the polynomial to fit
+
     Outputs:
         y_inter:   Array of the estimated y-values corresponding to t
         unc_inter; Array of the estimated uncertainties on y_inter. These are estimated as the absolute
