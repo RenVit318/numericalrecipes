@@ -54,7 +54,6 @@ def determine_implicit_pivot_coeff(mat):
     return row_max_inverse
 
 
-
 def gauss_jordan(coefficients, constraints, make_inverse=False):
     """Solves a set of linear equations using the Gauss Jordan method
 
@@ -123,30 +122,64 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
     #zero_elements = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
     #zero_elements.matrix[np.abs(A.matrix) > epsilon] = 1
     #TODO: Use this matrix properly
-    imax_ar = np.zeros(A.num_columns)
+
+    #imax_ar = np.zeros(A.num_columns)
     # First pivot the matrix
-    for i in range(A.num_columns):
-        # A.matrix[i:, i] selects all elements on or below the diagonal
-        if implicit_pivoting:
-            pivot_candidates = A.matrix[i:,i] * row_max_inverse[i:]
-        else:
-            pivot_candidates = A.matrix[i:,i]
+    #for i in range(A.num_columns):
+    #    # A.matrix[i:, i] selects all elements on or below the diagonal
+    #    if implicit_pivoting:
+    #        pivot_candidates = A.matrix[i:,i] * row_max_inverse[i:]
+    #    else:
+    #        pivot_candidates = A.matrix[i:,i]
+    # 
+    #    pivot_idx = i+np.argmax(np.abs(pivot_candidates))
+    #    imax_ar[i] = pivot_idx
+    #    A.swap_rows(i, pivot_idx)
+    #    print(A.row_order)
+    #print(imax_ar)
+
+    # Start with 'random' pivotting. Fix this later!
+
+    while True:
+        bad_pivot = False
+        for i in range(A.num_columns):
+            
+            if not bad_pivot:
+
+                nonzero_elements = np.where(np.abs(A.matrix[:, i]) > epsilon)[0]
+                nonzero_elements = nonzero_elements[nonzero_elements >= i]
+                if len(nonzero_elements) > 0:
+                    pivot_idx = np.random.choice(nonzero_elements)
+                    A.swap_rows(i, pivot_idx)
+                else:
+                    bad_pivot = True
+
+            
+        
+        for i in range(A.num_columns):
+            if not bad_pivot:
+                if np.abs(A.matrix[i, i]) < epsilon:
+                    bad_pivot = True
+        if bad_pivot:
+            print("Zero element in matrix. Resetting")
+            A = Matrix(values=coefficients)
+            continue
+        print(f'Matrix succesfully pivotted. Matrix:\n{A.matrix}\n{A.row_order}')
+        break
     
-        pivot_idx = i+np.argmax(np.abs(pivot_candidates))
-        imax_ar[i] = pivot_idx
-    print(imax_ar)
 
     for i in range(A.num_columns):
         # A.matrix[i:, i] selects all elements on or below the diagonal
         diag_element = A.matrix[i,i] # Use to scale alpha factors
 
-        #for j in range(i+1, A.num_rows): # This leaves a zero at the end, not the best fix this!
-        #    A.matrix[j,i] /= diag_element
-        #    for k in range(i+1, j):
-        #        A.matrix[j,k] -= A.matrix[j,i]*A.matrix[i,k]
+        for j in range(i+1, A.num_rows): # This leaves a zero at the end, not the best fix this!
+            A.matrix[j,i] /= diag_element
+            for k in range(i+1, j):
+                A.matrix[j,k] -= A.matrix[j,i]*A.matrix[i,k]
         print(A.matrix)
-    print(imax_ar, A.row_order)
+    print(A.row_order)
     return A
+
 
 def solve_lineqs_lu(LU, b):
     """"
@@ -164,8 +197,7 @@ def solve_lineqs_lu(LU, b):
         x.matrix[i] = (x.matrix[i] - np.sum(LU.matrix[i, i+1:]*x.matrix[i+1:]))
 
     return x
-        
-        
+               
 
 def check_lu_decomposition_old(LU, A):
     print("Starting LU Decomposition check")
@@ -186,6 +218,7 @@ def check_lu_decomposition_old(LU, A):
     for row in LU.row_order:
         print(L_times_U[row])
 
+
 def matrix_vector_mul(mat, vec):
     """Computes the product between a matrix of shape MxN and a vector of shape Nx1.
 
@@ -205,7 +238,6 @@ def matrix_vector_mul(mat, vec):
     return res
     
     
-
 def check_solution(A, x, b, epsilon=1e-10):
     """Checks a proposed solution to a system of linear equations by computing Ax - b and checking 
        if it is below some threshold"""
