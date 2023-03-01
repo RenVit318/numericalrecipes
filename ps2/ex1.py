@@ -37,7 +37,7 @@ def bisection(x, y, t, M):
     # Keep doing the below steps until we find the two points adjacent to t
     while True:
         left, right = split_list(adjacent_idxs)
-        if (t > x[left[0]]) & (t <= x[right[0]]):
+        if (t >= x[left[0]]) & (t < x[right[0]]):
             # Check if we're exactly on the boundary between two sets
             if t > x[left[-1]]:
                 adjacent_idxs = [left[-1], right[0]]
@@ -59,15 +59,16 @@ def bisection(x, y, t, M):
         min_idx = len(x) - M   
         max_idx = len(x) - 1
     else:
-        min_idx = adjacent_idxs[0] - ((M-2)//2)
-        max_idx = adjacent_idxs[1] + ((M-2)//2)
+        print(((M-2)//2))
+        min_idx = int(adjacent_idxs[0] - np.floor((M-2)/2))
+        max_idx = int(adjacent_idxs[1] + np.ceil((M-2)/2))
 
     # Check if bisection worked properly
-    if not ((x[min_idx] < t) & (t <= x[max_idx])):
+    if not ((x[min_idx] <= t) & (t <= x[max_idx])):
         raise ValueError(f'Mistake in bisection. {t} not between {x[min_idx]} and {x[max_idx]}')
 
-
-    return np.arange(min_idx, max_idx+1), False  # +1 to include max_idx
+    interp_points = np.arange(min_idx, max_idx+1)
+    return interp_points, False  # +1 to include max_idx
 
 
 def linear_interpolator(xdata, ydata, t):
@@ -84,42 +85,72 @@ def linear_interpolator(xdata, ydata, t):
     return y_inter_array
 
 def nevilles_equation(t, P1, P2, x1, x2):
+    """"Given two P and x values, computes Neville's Equation. This is used for the polynomial
+    interpolation function. The equation is:
+
+    H(x) = ((x_j - x) * F_i(x) + (x - x_i) * G_j(x)) / (x_j - x_i)
+
+    Inputs:
+        t : x, point to be interpolated
+        P1: F_i(x)
+        P2: G_j(x)
+        x1: x_i 
+        x2: x_j
+    
+    Outputs:
+        H_t: H(x)
+    """
     top = (x2 - t)*P1 + (t-x1)*P2
     return top / (x2 - x1)
     
 
 def poly_interpolator(xdata, ydata, t, M):
-    """Interpolates a function using a polynomial interpolator implemented with Neville's Algorithm"""
+    """This function first makes use of the bisection algorithm to identify M data points surrounding
+    the point to be interpolated, and then applies Neville's Algorithm to estimate its y-value and
+    the uncertainty on that estimation.
+
+    Note: While this function is called 'polynomial interpolator', it does accept values outside of the
+          provided range of xdata, and therefore can extrapolate. But the reported accuracy of the 
+          estimation drops off quickly outside the range.
+
+    Inputs:
+        xdata: N data points along the x-axis
+        ydata: N data points along the y-axis
+        t    : The points along the x-axis we want to interpolate, should always be provided as a 
+               list or ndarray for indexing purposes
+        M    : The order of the polynomial to fit
+    Outputs:
+        y_inter:   Array of the estimated y-values corresponding to t
+        unc_inter; Array of the estimated uncertainties on y_inter. These are estimated as the absolute
+                   difference between P_array[0] just after, and just before the final loop.
+"""
     y_inter = np.zeros_like(t)
+    unc_inter = np.zeros_like(t)
     for i in range(len(t)):
         interp_points, interpolated = bisection(xdata, ydata, t[i], M)
         P_array = np.array(ydata)[interp_points]
         x_points = np.array(xdata)[interp_points]
-        print(f'new t {t[i]}')
-        print(P_array)
-        #approximation = P_array[np.argmin(np.abs(x_points - t[i]))]
-        for k in range(M):
-            for j in range(M-k-1):
-                print(k, j)
-                P_array[j] = nevilles_equation(t[i], P_array[j], P_array[j+1], x_points[j], x_points[j+1])
-            print(P_array)
+
+        for k in range(1,M):
+            for j in range(M-k):
+                P_array[j] = nevilles_equation(t[i], P_array[j], P_array[j+1], x_points[j], x_points[j+k])
             if k == M - 2:
-                uncertainty = P_array[0] # This is e.g. P012, use its diff. with P0123 as dy
-    
+                previous_val = P_array[0] # This is e.g. P012, use its diff. with P0123 as dy
         y_inter[i] = P_array[0]
-#        print(y_inter[i], uncertainty - y_inter[i])
-    return y_inter
+        unc_inter[i] = np.abs(P_array[0] - previous_val)
+    return y_inter, unc_inter
 
 
 def run_interpolators():
     x_data = [1.0000, 4.3333, 7.6667, 11.000, 14.333, 17.667, 21.000]
-    y_data = [1.4925, 15.323, 3.2356,-29.472,-22.396, 24.019, 26.863]
-    M_poly = 4
+    y_data = [1.4925, 15.323, 3.2356,-29.472,-22.396, 24.019, 36.863]
+    M_poly = 7
 
     # Interpolation
-    t = np.linspace(0, 21, 101)
+    t = np.linspace(0, 40, 101)
     y_linear_inter = linear_interpolator(x_data, y_data, t)
-    y_poly_inter = poly_interpolator(x_data, y_data, t, M_poly)
+    y_poly_inter, unc_poly_inter = poly_interpolator(x_data, y_data, t, M_poly)
+
 
     # Plotting
     fig = plt.figure(figsize=(8, 8))
@@ -127,10 +158,16 @@ def run_interpolators():
 
     ax.scatter(x_data, y_data, c='red', label='Data')
     ax.plot(t, y_linear_inter, label='Linear Interpolation')
-    ax.plot(t, y_poly_inter, label=f'Polynomial Interoplation M={M_poly}')
+    ax.plot(t, y_poly_inter, c='C1', label=f'Polynomial Interoplation M={M_poly}')
+
+    ax.fill_between(t, y_poly_inter+unc_poly_inter, y_poly_inter-unc_poly_inter, color='C1', alpha=0.3)
+#    for x in x_data:
+        #ax.axvline(x=x)
 
     ax.set_xlabel('Time t')
     ax.set_ylabel('Signal Intensity I(t)')
+    #ax.set_ylim(1.2*np.min(y_data), 1.2*np.max(y_data))
+    ax.set_ylim(-100, 100)
     plt.legend()
     plt.show()
 
