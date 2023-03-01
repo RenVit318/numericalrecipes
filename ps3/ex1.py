@@ -174,7 +174,9 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
 
         for j in range(i+1, A.num_rows): # This leaves a zero at the end, not the best fix this!
             A.matrix[j,i] /= diag_element
-            for k in range(i+1, j):
+            print(i, j)
+            for k in range(i+1, j+1):
+                print(i, j, k)
                 A.matrix[j,k] -= A.matrix[j,i]*A.matrix[i,k]
         print(A.matrix)
     print(A.row_order)
@@ -267,8 +269,14 @@ def test_linear_equation_solvers():
     print(LU.row_order)
     
 
+def test_lu_low_dim():
+    coefficients = np.array([[4, 3], [6, 3]])
+    LU = lu_decomposition(coefficients)
+    
+
 def main():
     test_linear_equation_solvers()
+    #test_lu_low_dim()
 
 
 if __name__ == '__main__':
