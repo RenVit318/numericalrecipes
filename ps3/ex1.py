@@ -1,3 +1,10 @@
+############
+#
+# Scripts and functions for Exercise 1 of Problem Set 3
+# Solving systems of linear equations
+#
+############
+
 import numpy as np
 from scipy.linalg import lu
 epsilon = 1e-10 # Numerical accuracy threshold
@@ -123,24 +130,21 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
     #zero_elements.matrix[np.abs(A.matrix) > epsilon] = 1
     #TODO: Use this matrix properly
 
-    #imax_ar = np.zeros(A.num_columns)
-    # First pivot the matrix
-    #for i in range(A.num_columns):
-    #    # A.matrix[i:, i] selects all elements on or below the diagonal
-    #    if implicit_pivoting:
-    #        pivot_candidates = A.matrix[i:,i] * row_max_inverse[i:]
-    #    else:
-    #        pivot_candidates = A.matrix[i:,i]
-    # 
-    #    pivot_idx = i+np.argmax(np.abs(pivot_candidates))
-    #    imax_ar[i] = pivot_idx
-    #    A.swap_rows(i, pivot_idx)
-    #    print(A.row_order)
-    #print(imax_ar)
+    imax_ar = np.zeros(A.num_columns)
+    ## First pivot the matrix
+    for i in range(A.num_columns):
+        #A.matrix[i:, i] selects all elements on or below the diagonal
+        if implicit_pivoting:
+            pivot_candidates = A.matrix[i:,i] * row_max_inverse[i:]
+        else:
+            pivot_candidates = A.matrix[i:,i]
+     
+        pivot_idx = i+np.argmax(np.abs(pivot_candidates))
+        imax_ar[i] = pivot_idx
+        A.swap_rows(i, pivot_idx)
 
-    # Start with 'random' pivotting. Fix this later!
-
-    while True:
+    # Start with 'random' pivotting. Fix this later!. Remove?
+    while False:
         bad_pivot = False
         for i in range(A.num_columns):
             
@@ -174,12 +178,9 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
 
         for j in range(i+1, A.num_rows): # This leaves a zero at the end, not the best fix this!
             A.matrix[j,i] /= diag_element
-            print(i, j)
-            for k in range(i+1, j+1):
-                print(i, j, k)
+            for k in range(i+1, A.num_rows):#j+1):
                 A.matrix[j,k] -= A.matrix[j,i]*A.matrix[i,k]
-        print(A.matrix)
-    print(A.row_order)
+
     return A
 
 
@@ -187,25 +188,30 @@ def solve_lineqs_lu(LU, b):
     """"
 
     """
+
     x = Matrix(values=b)
     # Begin by swapping the x's in the right order
     x.matrix = x.matrix[LU.row_order]
-    print(x.matrix)
-    for i in range(1, x.num_rows):
+
+    # Forward Subsitutions. Solves Ly = b
+    for i in range(0, x.num_rows):
         x.matrix[i] -= np.sum(LU.matrix[i, :i] * x.matrix[:i])
 
-    #x.matrix[-1] = x.matrix[-1]/LU.matrix[-1, -1]
+    # Backward Substitutions. Solves Ux = y
     for i in range(x.num_rows-1, -1, -1):
-        x.matrix[i] = (x.matrix[i] - np.sum(LU.matrix[i, i+1:]*x.matrix[i+1:]))
+        x.matrix[i] = (1./LU.matrix[i,i])*(x.matrix[i] - np.sum(LU.matrix[i, i+1:]*x.matrix[i+1:]))
 
     return x
                
 
-def check_lu_decomposition_old(LU, A):
-    print("Starting LU Decomposition check")
+def check_lu_decomposition_old(LU, A, epsilon=1e-10):
+    """"Checks if the LU decompostion algorithm properly did its work by multiplying L and U, and comparing 
+    it against A. Returns True if the sum of (L*U) - A is smaller than some threshold epsilon"""
+
     L = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
     U = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
 
+    # Can we fill in L and U simultaneously?
     for i in range(A.num_columns):
         for j in range(A.num_rows):
             if i == j:
@@ -216,10 +222,15 @@ def check_lu_decomposition_old(LU, A):
             elif j < i:
                 U.matrix[j, i] = LU.matrix[j,i]
 
-    L_times_U = np.matmul(L.matrix, U.matrix)
-    for row in LU.row_order:
-        print(L_times_U[row])
 
+    #TODO Implement matrix multiplication!!!!
+    L_times_U = np.matmul(L.matrix, U.matrix)
+    diff = np.sum(L_times_U - A.matrix)
+    if diff < epsilon:
+        return True
+    else:
+        raise ValueError("LU Decomposition Error")
+    
 
 def matrix_vector_mul(mat, vec):
     """Computes the product between a matrix of shape MxN and a vector of shape Nx1.
@@ -232,11 +243,12 @@ def matrix_vector_mul(mat, vec):
         res: The result of mat x vec, ndarray of shape Mx1
 
     """
-    print(vec)
+        
     res = np.zeros_like(vec)
     for i in range(mat.shape[0]):
         for j in range(mat.shape[1]):
-            res[j] += mat[i, j] * vec[j]
+            res[i] += mat[i, j] * vec[j]
+            
     return res
     
     
@@ -252,13 +264,16 @@ def test_linear_equation_solvers():
                              [4, 4, 3,-40, 0],
                              [0, 2, 1, -3,-2], 
                              [0, 1, 0,-12, 0]])
+
     constraints = np.array([2, 0, 1, 0, 0]) 
 
     #gj_solution = gauss_jordan(coefficients, constraints, make_inverse=True)
     LU = lu_decomposition(coefficients, implicit_pivoting=True)
     x = solve_lineqs_lu(LU, constraints)
+    print(f'L times U:\n{check_lu_decomposition_old(LU, Matrix(values=coefficients))}')
     print(matrix_vector_mul(coefficients,x.matrix))
     print(check_solution(coefficients, x.matrix, constraints))
+    print(np.abs(np.sum(np.matmul(coefficients, x.matrix) - constraints )) < epsilon)
     #check_lu_decomposition(LU, Matrix(coefficients))
     #P, L, U = lu(coefficients)
     return
@@ -271,7 +286,11 @@ def test_linear_equation_solvers():
 
 def test_lu_low_dim():
     coefficients = np.array([[4, 3], [6, 3]])
+    constraints = np.array([6,4])
     LU = lu_decomposition(coefficients)
+    print(LU.matrix)
+    x = solve_lineqs_lu(LU, constraints)
+    print(check_solution(coefficients, x.matrix, constraints))
     
 
 def main():
