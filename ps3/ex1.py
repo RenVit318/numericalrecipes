@@ -255,7 +255,7 @@ def matrix_vector_mul(mat, vec):
 def check_solution(A, x, b, epsilon=1e-10):
     """Checks a proposed solution to a system of linear equations by computing Ax - b and checking 
        if it is below some threshold"""
-    return np.abs(np.sum(matrix_vector_mul(A, x) - b)) < epsilon
+    return (np.abs((matrix_vector_mul(A, x) - b)) < epsilon).any()
 
 
 def test_linear_equation_solvers():
