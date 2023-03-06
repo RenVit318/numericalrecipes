@@ -34,7 +34,7 @@ def compute_poisson_values(dtype_int=np.int32, dtype_float=np.float32):
     """"Compute the Poisson values for the points provided in Q1 of hand-in assignment 1.
     For testing purposes we compare our values to those from an official library
     """
-    print(log_factorial(1, dtype_float))
+
     values = [[1, 0], [5, 10], [3, 21], [2.6, 40], [101, 200]]
     poisson_prob_ar_self = np.zeros(len(values))
     poisson_prob_ar_scipy = np.zeros(len(values))
@@ -51,7 +51,8 @@ def compute_poisson_values(dtype_int=np.int32, dtype_float=np.float32):
     for i in range(poisson_prob_ar_self.shape[0]):
         table += f'{values[i][0]} & {values[i][1]} & {poisson_prob_ar_self[i]:.6E} & {poisson_prob_ar_scipy[i]:.6E} \\\n'
 
-    print(table)
+    with open('results/poisson_tab.txt', 'w') as file:
+        file.write(table)
 
 
 def main():

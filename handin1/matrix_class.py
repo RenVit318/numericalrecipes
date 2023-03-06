@@ -19,7 +19,7 @@ class Matrix():
                 self.num_columns = values.shape[1]
             except IndexError:
                 self.num_columns = 1
-                print(f'Warning! Values has dim=1. Making vector with shape ({self.num_rows}, {self.num_columns})')
+                #print(f'Warning! Values has dim=1. Making vector with shape ({self.num_rows}, {self.num_columns})')
             if type(values) == np.ndarray:
                 self.matrix = np.array(values, dtype=dtype)
             else:

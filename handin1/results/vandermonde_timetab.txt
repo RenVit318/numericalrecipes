@@ -1,0 +1,5 @@
+Algorithm & Runtime (ms) \
+\hline
+LU Decomposition (1x) & 3.17 \
+LU Decomposition (10x) & 14.20 \
+Neville's Algorithm & 268.10
