@@ -6,7 +6,7 @@ We start by presenting the background code and miscelaneous functions for matric
 \lstinputlisting[caption={Matrix and vector multiplication functions, and a function to check if a solution x to the system of equations Ax = b is correct.}, linerange={63-68, 98-144}]{matrix_functions.py}
 \lstinputlisting[caption={Code to import the data and apply the algorithms described throughout this section}, linerange={18-40, 73-108}]{vandermonde.py}
 
-In this section we will work with a Vandermonde matrix $V$, which is defined as an $NxN$ matrix with elements $V_{i,j} = x_i^j$ for rows $i$ and columns $j$ ranging from $0$ to $N-1$. For any set with N $(x_i, y_i)$ points, we can populate the Vandermonde matrix and solve the set of linear equations $Vc = y$ to find the coefficients $c$ of the unique polynomial passing through all $(x_i, y_i)$ points. Here, we will apply two different methods to find this polynomial and compare the results. 
+In this section we will work with a Vandermonde matrix $V$, which is defined as an $N$x$N$ matrix with elements $V_{i,j} = x_i^j$ for rows $i$ and columns $j$ ranging from $0$ to $N-1$. For any set with N $(x_i, y_i)$ points, we can populate the Vandermonde matrix and solve the set of linear equations $Vc = y$ to find the coefficients $c$ of the unique polynomial passing through all $(x_i, y_i)$ points. Here, we will apply two different methods to find this polynomial and compare the results. 
 \\ \\
 We will begin by introducing both methods, and providing the code used to implement them in Python. Afterwards we present the results of our implementation, and a discussion of these results.
 
