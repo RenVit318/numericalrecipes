@@ -203,17 +203,16 @@ def solve_lineqs_lu(LU, b):
 
     return x
                
-
-def check_lu_decomposition_old(LU, A, epsilon=1e-10):
-    """"Checks if the LU decompostion algorithm properly did its work by multiplying L and U, and comparing 
+def check_lu_decomposition(LU, A, epsilon=1e-10):
+    """"Checks if the LU decompostion algorithm properly did its work by multiplying L and U, and comparing
     it against A. Returns True if the sum of (L*U) - A is smaller than some threshold epsilon"""
 
-    L = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
-    U = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
+    L = Matrix(num_rows=LU.num_rows, num_columns=LU.num_columns)
+    U = Matrix(num_rows=LU.num_rows, num_columns=LU.num_columns)
 
     # Can we fill in L and U simultaneously?
-    for i in range(A.num_columns):
-        for j in range(A.num_rows):
+    for i in range(LU.num_columns):
+        for j in range(LU.num_rows):
             if i == j:
                 L.matrix[j, i] = 1
                 U.matrix[j, i] = LU.matrix[j,i]
@@ -223,14 +222,13 @@ def check_lu_decomposition_old(LU, A, epsilon=1e-10):
                 U.matrix[j, i] = LU.matrix[j,i]
 
 
-    #TODO Implement matrix multiplication!!!!
+    #L_times_U = mat_mat_mul(L.matrix, U.matrix)
     L_times_U = np.matmul(L.matrix, U.matrix)
-    diff = np.sum(L_times_U - A.matrix)
-    if diff < epsilon:
-        return True
-    else:
-        raise ValueError("LU Decomposition Error")
-    
+    print(np.abs(L_times_U))
+    for i in range(L.num_rows):
+        if not (np.abs(L_times_U[i] - A[LU.row_order[i]]) < epsilon).all():   
+            raise ValueError("LU Decomposition Error")
+    return True
 
 def matrix_vector_mul(mat, vec):
     """Computes the product between a matrix of shape MxN and a vector of shape Nx1.
@@ -270,6 +268,7 @@ def test_linear_equation_solvers():
     #gj_solution = gauss_jordan(coefficients, constraints, make_inverse=True)
     LU = lu_decomposition(coefficients, implicit_pivoting=True)
     x = solve_lineqs_lu(LU, constraints)
+    print(x.matrix )
     print(f'L times U:\n{check_lu_decomposition_old(LU, Matrix(values=coefficients))}')
     print(matrix_vector_mul(coefficients,x.matrix))
     print(check_solution(coefficients, x.matrix, constraints))

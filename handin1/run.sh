@@ -6,14 +6,18 @@ if [! -d 'results']; then
   mkdir results
 fi
 
+# Import data
+wget 
+
 # Import any images here
 
 echo 'Running Q1: Poisson Distribution..'
-python poisson.py
+python3 poisson.py
 
-read varname
 echo 'Running Q2: Vandermonde Matrix'
-python vandermonde.py
+python3 vandermonde.py
+
+echo 'Start making LaTeX PDF..'
 
 pdflatex latex/main.tex
-read varname
+

@@ -9,7 +9,7 @@ import sys
 import os
 import matplotlib.pyplot as plt
 from matrix_class import Matrix
-from matrix_functions import lu_decomposition, check_lu_decomposition, check_solution, solve_lineqs_lu
+from matrix_functions import lu_decomposition, check_solution, solve_lineqs_lu
 from interpolation import poly_interpolator
 import timeit
 from plotting import set_styles
@@ -44,6 +44,7 @@ def LU_decomposition(V, x, y, x_interp, num_iterations=0):
     all points x_i, y_i. If num_iterations > 0, we reapply the LU matrix to \delta y = Vc' - y. """
     LU = lu_decomposition(V)
     LU_coefficients = solve_lineqs_lu(LU, y)
+    
 
     # Evaluate the Vandermonde polynomial on the whole smooth range, and at the 20 data points
     LU_polynomial = compute_polynomial(x_interp, LU_coefficients.matrix)
@@ -86,8 +87,8 @@ def vandermonde_fit(num_LU_iterations=10):
     fig, (ax0, ax1) = plt.subplots(2,1, sharex=True, figsize=(10,8))
     ax0.plot(x, y, marker='o', linewidth=0)
     ax0.plot(x_interp, LU_y, c='C1', label='LU Decomposition')
-    ax0.plot(x_interp, neville_y, c='C2', label="Neville's Algorithm")
-    ax0.plot(x_interp, LU_y_iterative, c='C3', label=f'{num_LU_iterations} Times Iterated LU')
+    ax0.plot(x_interp, neville_y, c='C2', ls='dashed', label="Neville's Algorithm")
+    ax0.plot(x_interp, LU_y_iterative, c='C3', ls='dotted', label=f'{num_LU_iterations} Times Iterated LU')
     ax0.legend()
 
     ax1.plot(x, np.abs(y - LU_y_at_x), c='C1', marker='o', lw=0)
@@ -102,7 +103,7 @@ def vandermonde_fit(num_LU_iterations=10):
     ax0.set_ylabel('$y$')
     ax1.set_ylabel(r'Absolute $\Delta y$')
 
-    plt.suptitle("Vandermonde Matrix Fit Results")
+    plt.suptitle("Lagrange Polynomial Estimations"          )
     plt.savefig('results/vandermonde_fitresults.png', bbox_inches='tight')
     #plt.show()
 
@@ -126,21 +127,22 @@ def vandermonde_timeit(num_iter=100):
                                          \nV, x, y, x_interp = import_data()',
                                   number=num_iter)/num_iter
 
-    table = f"""Algorithm & Runtime (ms) \\
+    table = f"""Algorithm & Runtime (ms) \\\\
 \hline
-LU Decomposition (1x) & {time_LU*1e3:.2f} \\
-LU Decomposition (10x) & {time_LU_iterative*1e3:.2f} \\
+LU Decomposition (1x) & {time_LU*1e3:.2f} \\\\
+LU Decomposition (10x) & {time_LU_iterative*1e3:.2f} \\\\
 Neville's Algorithm & {time_neville*1e3:.2f}"""
 
     with open('results/vandermonde_timetab.txt', 'w') as f:
         f.write(table)
 
-    print('almost done.')
-    input()
+    #print('almost done.')
+    #input()
 
 def main():
     vandermonde_fit()
-    #vandermonde_timeit()
+    print("\tTiming Algorithms..")
+    vandermonde_timeit()
 
 
 if __name__ == '__main__':

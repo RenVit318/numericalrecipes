@@ -1,0 +1,26 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\input{latex/included_packages}
+
+%opening
+\title{Numerical Recipes: Hand-In 1}
+\author{Rens Kievit (s1948415)}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    In this report we present the problems, solutions and scripts for the exercises from the first handout for the course Numerical Recipes.
+\end{abstract}
+
+Plotting styles in this report are set using the following code
+
+\lstinputlisting[caption={Matplotlib Plotting Styles}, linerange={5,12}]{plotting.py}
+
+% NOTE: All paths are from base directory
+\include{latex/poisson}
+\include{latex/vandermonde}
+
+
+\end{document}

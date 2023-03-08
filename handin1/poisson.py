@@ -6,7 +6,26 @@
 
 import numpy as np
 import scipy.stats
-from algebra import factorial, log_factorial
+
+def factorial(k, dtype=np.int64):
+    """Computes the factorial k! for any integer k"""
+    if k == 0:
+        return dtype(1)
+    else:
+        prod = dtype(1)
+        for i in range(1, k+1):
+            prod *= dtype(i)
+        return prod
+
+def log_factorial(k, dtype=np.int64):
+    """Computes the factorial k! for any integer k in log-space"""
+    if k == 0:
+        return dtype(1)
+    else:
+        logsum = dtype(0)
+        for i in range(1, k+1):
+            logsum += np.log(i, dtype=dtype)
+        return logsum
 
 
 def poisson(lmda, k, dtype_int, dtype_float):
@@ -46,10 +65,12 @@ def compute_poisson_values(dtype_int=np.int32, dtype_float=np.float32):
         poisson_prob_ar_scipy[i] = scipy.stats.poisson.pmf(k, lmda)
 
     # Print table in Latex ready format
-    table = """$\lamda$ & k & Self & Scipy \\\n\hline\n"""
+    table = """$\lambda$ & k & Self & Scipy \\\\\n\hline\n"""
 
     for i in range(poisson_prob_ar_self.shape[0]):
-        table += f'{values[i][0]} & {values[i][1]} & {poisson_prob_ar_self[i]:.6E} & {poisson_prob_ar_scipy[i]:.6E} \\\n'
+        table += f'{values[i][0]} & {values[i][1]} & {poisson_prob_ar_self[i]:.6E} & {poisson_prob_ar_scipy[i]:.6E} \\\\\n'
+    table = table[:-4] # Remove the last two \\ for a nicer Latex file
+
 
     with open('results/poisson_tab.txt', 'w') as file:
         file.write(table)

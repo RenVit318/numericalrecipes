@@ -35,14 +35,6 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
     if implicit_pivoting:
         row_max_inverse = determine_implicit_pivot_coeff(A)
 
-    # We need a way to make sure that we do not get stuck at a column where all of the elements
-    # below the diagonal are zero. In that case it is going to be impossible to get a proper pivot
-    # without messing up all of the work done in earlier columns
-    # Note all rows in each column that are zero
-    # zero_elements = Matrix(num_rows=A.num_rows, num_columns=A.num_columns)
-    # zero_elements.matrix[np.abs(A.matrix) > epsilon] = 1
-    # TODO: Use this matrix properly
-
     imax_ar = np.zeros(A.num_columns)
     # First pivot the matrix
     for i in range(A.num_columns):
@@ -68,34 +60,6 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
     return A
 
 
-def check_lu_decomposition(LU, A, epsilon=1e-10):
-    """"Checks if the LU decompostion algorithm properly did its work by multiplying L and U, and comparing
-    it against A. Returns True if the sum of (L*U) - A is smaller than some threshold epsilon"""
-
-    L = Matrix(num_rows=LU.num_rows, num_columns=LU.num_columns)
-    U = Matrix(num_rows=LU.num_rows, num_columns=LU.num_columns)
-
-    # Can we fill in L and U simultaneously?
-    for i in range(LU.num_columns):
-        for j in range(LU.num_rows):
-            if i == j:
-                L.matrix[j, i] = 1
-                U.matrix[j, i] = LU.matrix[j,i]
-            elif j > i:
-                L.matrix[j, i] = LU.matrix[j,i]
-            elif j < i:
-                U.matrix[j, i] = LU.matrix[j,i]
-
-
-    #L_times_U = mat_mat_mul(L.matrix, U.matrix)
-    L_times_U = np.matmul(L.matrix, U.matrix)
-    print(np.abs(L_times_U - A))
-    if (np.abs(L_times_U - A) < epsilon).all():
-        return True
-    else:
-        raise ValueError("LU Decomposition Error")
-
-
 def check_solution(A, x, b, epsilon=1e-10):
     """Checks a proposed solution to a system of linear equations by computing Ax - b and checking
        if all elements are below some threshold"""
@@ -103,8 +67,16 @@ def check_solution(A, x, b, epsilon=1e-10):
 
 
 def solve_lineqs_lu(LU, b):
-    """"
+    """"Performs the steps to solve a system of linear equations after a matrix A has been LU decomposed. It 
+    does this by first applying forward substitution to solve Ly = b, and then applies backward subsituttion
+    to solve Ux = y.
+    
+    Inputs:
+        LU: The decomposed L and U matrices, stored in a single Matrix instance
+        b: The constraints of the linear equations, ndarray
 
+    Outputs:
+        x: Matrix instance containing the solution such that Ax = b
     """
 
     x = Matrix(values=b)
@@ -173,11 +145,7 @@ def mat_mat_mul(A, B):
 
 
 def main():
-    A = np.array([[1,2],[3,4]])
-    B = np.array([[3,4], [2,3]])
-    print(np.array([B]))
-    print(mat_mat_mul(A, B))
-
+    pass
 
 if __name__ == '__main__':
     main()

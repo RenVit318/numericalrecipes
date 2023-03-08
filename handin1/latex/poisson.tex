@@ -1,0 +1,52 @@
+\section{Poisson Distribution}
+
+% Some code stuff here
+
+The Poisson probability distribution for any given positive integer $k$ and positive mean $\lambda$ is given as
+
+\begin{equation}
+    P_{\lambda}(k) = \frac{\lambda^{k}\exp^{-\lambda}}{k!}.
+\end{equation}
+
+This distribution is normalized such that $\sum_{k=0}^{\infty} P_{\lambda}(k) = 1$. This distribution is implemented in an existing Python package as \texttt{scipy.stats.poisson.scipy}, but in this report we will implement this distribution using only pure Python, and \texttt{numpy.exponent}. For memory reasons we will limit the variables to only use 32 bits. As a test of the implementation, we will compute $P_{\lambda}(k)$ for the values presented in Table \ref{tab:poisson_vals}. 
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c}
+    \hline
+    $\lambda$ & $k$ \\
+    \hline
+        1 & 0 \\
+        5 & 10 \\
+        3 & 21 \\        
+        2.6 & 40 \\
+        101 & 200 \\
+    \end{tabular}
+    \caption{$\lambda$ and $k$ values at which $P_{\lambda}(k)$ is evaluated in this report.}
+    \label{tab:poisson_vals}
+\end{table}
+
+Before we start programming, we can already see a potential memory issue in the parameters at which we want to evaluate the probability distribution. For $k = 200$ we have to compute $200! = 7.9 \times 10^{374}$ which is a lot larger than the maximum size of a 32-bit signed integer, $2^{31} = 2.1 \times 10^{9}$. This issue starts even earlier, the factorial function overtakes this maximum size already at $k \sim 12$. To combat this potential overflow error we will instead compute $\ln P_{\lambda}(k)$. To denote this in a smart way, we have to rewrite the factorial by realizing that $k! = \prod_{i=1}^k i$. Therfore $\ln k! = \ln \prod_{i=1}^k i = \sum_{i=1}^{k} \ln(i)$. We apply this trick only if $k > 5$ as a generous underlimit for when overflow starts becoming an issue.
+
+\begin{equation}
+    \ln P_{\lambda}(k) = \ln\left(\frac{\lambda^{k}\exp^{-\lambda}}{k!}\right) = k \cdot \ln(\lambda) - \lambda - \sum_{i=1}^{k} \ln(i)
+\end{equation}
+
+Combining all of the above we can code this as such:
+
+\lstinputlisting[caption={All code for Poisson Distribution calculations}, firstline=7]{poisson.py}
+%\lstset{} 
+
+As visible in the code we compute both the Poisson distribution evaluated by our code, and by the Scipy implementation and compare them in a table. We present these results in Table \ref{tab:poisson_results}. We can see that for low values of $\lambda$, $k$ the results match up exactly up to siz digits. When moving towards higher values we can see that the "true" Scipy values and our estimates are the same up to the fourth decimal digit. In both cases we only consider the number, not the exponent.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c|c}
+        \hline
+        \input{results/poisson_tab.txt}
+    \end{tabular}
+    \caption{Results of the Poisson distribution code presented in this work, and the implementation from \texttt{scipy.stats.poisson.pmf}.}
+    \label{tab:poisson_results}
+\end{table}
+
+
