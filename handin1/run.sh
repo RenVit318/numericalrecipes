@@ -7,14 +7,14 @@ if [! -d 'results']; then
 fi
 
 # Import data
-wget 
+wget https://home.strw.leidenuniv.nl/~daalen/Handin_files/Vandermonde.txt
 
 # Import any images here
 
 echo 'Running Q1: Poisson Distribution..'
 python3 poisson.py
 
-echo 'Running Q2: Vandermonde Matrix'
+echo 'Running Q2: Vandermonde Matrix..'
 python3 vandermonde.py
 
 echo 'Start making LaTeX PDF..'

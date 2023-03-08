@@ -17,7 +17,7 @@ from plotting import set_styles
 
 def import_data():
     """Import the Vandermonde data and place it in a Vandermonde matrix"""
-    data = np.genfromtxt(os.path.join(sys.path[0], "data/vandermonde_data.txt"), comments='#', dtype=np.float64)
+    data = np.genfromtxt(os.path.join(sys.path[0], "Vandermonde.txt"), comments='#', dtype=np.float64)
     x = data[:, 0]
     y = data[:, 1]
     x_interp = np.linspace(x[0], x[-1], 1001)  # x values to interpolate at
