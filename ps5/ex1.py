@@ -67,7 +67,7 @@ def diff_func():
     #for h in h_vals:
     #    plt.plot(x, central_difference(func, x, h), label=f'df(x)/dx CD h={h}', ls='--')
 
-    for target_acc in [1e-10]:#[1e-2, 1e-5, 1e-8, 1e-10, 1e-15]:
+    for target_acc in [1e-2, 1e-5, 1e-8, 1e-10, 1e-15]:
         ridder_derivative = ridders_method(func, x, ridder_h_start, ridder_d, target_acc)
         ax0.plot(x, ridder_derivative, ls='--', label=f'Ridder Acc={target_acc}')
         
