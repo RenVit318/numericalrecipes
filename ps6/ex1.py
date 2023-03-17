@@ -55,10 +55,10 @@ def ridders_method(func, x_ar, h_start, dec_factor, target_acc, approx_array_len
 
 def diff_func():
     h_vals = [0.1, 0.01, 0.001]
-    ridder_h_start = 0.1
+    ridder_h_start = 1
     ridder_d = 2
     target_acc = 1e-2
-    x = np.linspace(0, 2*np.pi, 1000)
+    x = np.linspace(0, 2*np.pi, 101)
 
     fig, (ax0, ax1) = plt.subplots(2,1)
 #    ax0.plot(x, func(x), label='f(x)', c='black')
@@ -72,7 +72,7 @@ def diff_func():
         ax0.plot(x, ridder_derivative, ls='--', label=f'Ridder Acc={target_acc}')
         
       
-        ax1.plot(x, np.abs((ridder_derivative - df_dx_analytical(x))))#/df_dx_analytical(x)))
+        ax1.plot(x, np.abs(ridder_derivative - df_dx_analytical(x)))
     ax0.legend()
     plt.yscale('log')
     plt.show()
