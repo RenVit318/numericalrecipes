@@ -12,24 +12,65 @@ def simple_trapezoid(x, y):
     return area_sum
         
 
+def romberg_integration(func, a, b, order):
+    """Integrate a function using Romberg Integration"""
+    # initiate all parameters
+    r_array = np.zeros(order)
+    h = b - a
+    N_p = 1
+
+    # fill in first estimate
+    r_array[0] = 0.5*h*(func(b) - func(a))
+    
+    # First iterations to fill out estimates of order m
+    for i in range(1, order):
+        delta = h
+        h *= 0.5
+        x = a + h
+
+        #print(f'new order {i}: delta = {delta}; h = {h}; x0 = {x}')
+
+        # Evaluate function at Np points
+        for j in range(N_p):
+            r_array[i] += func(x)
+            x += delta
+        # Combine new function evaluations with previous 
+        r_array[i] = 0.5*(r_array[i-1] + delta*r_array[i])
+        N_p *= 2
+    
+    # Combine all of our estimations to cancel our error terms
+    N_p = 1
+    for i in range(1,order):
+        N_p *= 4
+        for j in range(order-i):
+            r_array[j] = (N_p*r_array[j+1] - r_array[j])/(N_p-1)
+
+    return r_array[0]
+    
+
+
+
+
 def integration_test():
     """"""
     h = 0.1 # integration stepsize
 
     # Test functions to integrate
+    func1 = lambda x: x*x
     x1 = np.linspace(1, 5, int((5-1)/h))
-    y1 = x1*x1
+    y1 = func1(x1)
         
+    func2 = lambda x: np.sin(x)
     x2 = np.linspace(0, np.pi, int((np.pi)/h))
-    y2 = np.sin(x2)
+    y2 = func2(x2)
 
     # Simple Trapezoid Rule
     simp_trap1 = simple_trapezoid(x1, y1)
     simp_trap2 = simple_trapezoid(x2, y2)
 
     # Simpson's Method
-    simpson1 = 0
-    simpson2 = 0
+    simpson1 = romberg_integration(func1, 1, 5, 6 )
+    simpson2 = romberg_integration(func2, 0, np.pi, 6)
 
     print('Simple Trapezoid Rule')
     print(f'Integral 1: {simp_trap1}')
