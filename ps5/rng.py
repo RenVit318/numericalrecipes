@@ -18,11 +18,11 @@ def lcg(x, a, c, m):
 def to_int32(x):
     """Takes any integer x, and returns the last 32 bits"""
     binx = bin(np.uint64(x))
+    # First two chars are '0b' can ignore these
     if len(binx) > 33:
         bin32 = binx[-32:]
     else: 
         bin32 = (32 - len(binx)) * '0' + binx[2:]
-        
     return int(bin32, 2)
 
 def mwc_base32(x, a):
@@ -32,9 +32,21 @@ def mwc_base32(x, a):
     x = a*(x & np.uint64((2**32 - 1))) + (x >> np.uint64(32))
     return x
 
+def rng_from_mwc(N, x0=1898567, a=4294957665):
+    """Sample N values using mwc_base32 with starting value x0
+    The given value for a is an optimal seed. We use all 64-bits
+    to generate the random number, but only return the last 32
+    """
+    x = np.zeros(N)
+    for i in range(N):
+        x0 = mwc_base32(x0, a)
+        x[i] = to_int32(x0)
+    return x
+
+
 def test_rng():
     # PARAMS
-    N = int(1e5)
+    N = int(1e4)
     a = 4294957665
     c = 1013904233
     m = 2**32
@@ -43,12 +55,7 @@ def test_rng():
     rng = lambda x: mwc_base32(x, a)
     ##### 
     
-    x = np.zeros(N)
-    x[0] = x0
-    prev_x = x[0]
-    for i in range(1,N):
-        prev_x = rng(prev_x)
-        x[i] = to_int32(prev_x)
+    x = rng_from_mwc(N)
     pearson_corr = pearson(x[:-1], x[1:])    
 
     plt.scatter(x[:-1], x[1:], s=1, label=r'$r_{x_ix_{i+1}}$' + f' = {pearson_corr:.2f}')
@@ -56,6 +63,9 @@ def test_rng():
     plt.xlabel(r'$x_i$')
     plt.ylabel(r'$x_{i+1}$')
     plt.legend()
+    plt.show()
+
+    plt.plot(np.arange(N), x)
     plt.show()
     
     
