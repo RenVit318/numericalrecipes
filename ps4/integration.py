@@ -12,23 +12,27 @@ def simple_trapezoid(x, y):
     return area_sum
         
 
-def romberg_integration(func, a, b, order):
+def romberg_integration(func, a, b, order, open_formula=False):
     """Integrate a function using Romberg Integration"""
     # initiate all parameters
     r_array = np.zeros(order)
     h = b - a
     N_p = 1
 
-    # fill in first estimate
-    r_array[0] = 0.5*h*(func(b) - func(a))
+    # fill in first estimate, don't do this if we cant evaluate at the edges
+    if open_formula:
+        # First estimate will be with h = (b-a)/2
+        start_point = 0
+    else:
+        r_array[0] = 0.5*h*(func(b) - func(a))
+        start_point = 1
+
     
     # First iterations to fill out estimates of order m
-    for i in range(1, order):
+    for i in range(start_point, order):
         delta = h
         h *= 0.5
         x = a + h
-
-        #print(f'new order {i}: delta = {delta}; h = {h}; x0 = {x}')
 
         # Evaluate function at Np points
         for j in range(N_p):

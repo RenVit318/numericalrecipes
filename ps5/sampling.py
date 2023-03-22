@@ -4,7 +4,7 @@ from rng import rng_from_mwc
 
 
 
-def rejection_sampling(func, rng, N, shift_x=None, shift_y=None):
+def rejection_sampling_old(func, rng, N, shift_x=None, shift_y=None):
     """Sample a distribution using rejection sampling
     Expand documentation!"""
     # The first N points are x, the second N points are y
@@ -23,6 +23,24 @@ def rejection_sampling(func, rng, N, shift_x=None, shift_y=None):
 
     return uniform_dist[:N][not_rejected]
     
+def rejection_sampling(func, rng, N, shift_x=None, shift_y=None):
+    """Sample a distribution using rejection sampling
+    Expand documentation!"""
+    
+    sampled_points = np.zeros(N)
+    for i in range(N):
+        not_sampled = True
+        while not_sampled:
+            x, y = rng(2)
+            if shift_x is not None:
+                x = shift_x(x)
+            if shift_y is not None:
+                y = shift_y(y)
+        
+            if y < func(x):
+                sampled_points[i] = x
+                not_sampled = False
+    return sampled_points
 
 def gauss(x, sigma, mu):
     return (1./(sigma*np.sqrt(2*np.pi))) * np.exp(-0.5*((x-mu)**2)/(sigma**2))
