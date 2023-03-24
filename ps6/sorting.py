@@ -102,9 +102,6 @@ def merge_sort(a):
         for i in range(int(np.ceil(N/subsize))):
             # We need the max(.. , N) to ensure that we do not exceed the length of the 
             # array with our indexing
-            #print('indices')
-            #print(i*subsize, i*subsize+int(0.5*subsize))
-            #print(i*subsize+int(0.5*subsize), np.min(((i+1)*subsize, N)))
             subarray1 = a[i*subsize: i*subsize+int(0.5*subsize)] # First half of the interval
             subarray2 = a[i*subsize+int(0.5*subsize): np.min(((i+1)*subsize, N))]
             sorted_sub = sort_subarrays(subarray1, subarray2)

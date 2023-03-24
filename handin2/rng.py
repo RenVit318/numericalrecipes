@@ -8,7 +8,7 @@ def to_int32(x):
         bin32 = binx[-32:]
     else: 
         bin32 = (32 - len(binx)) * '0' + binx[2:]
-    return int(bin32, 2)
+    return int(bin32, 2)1
 
 def mwc_base32(x, a):
     """"""

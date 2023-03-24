@@ -18,21 +18,20 @@ def ridders_equation(D1, D2, j, dec_factor):
 
 def ridders_method(func, x_ar, h_start, dec_factor, target_acc, approx_array_length=15):
     """"""
-    derivative_array = np.zeros_like(x_ar)
-    unc_array = np.zeros_like(x_ar)
+    derivative_array = np.zeros_like(x_ar, dtype=np.float64)
+    unc_array = np.zeros_like(x_ar, dtype=np.float64)
 
-    for ar_idx in range(x_ar.shape[0]):
+    for ar_idx in range(len(x_ar)):
         x = x_ar[ar_idx]
-
         # Make this larger if we have not reached our target accuracy yet
-        approximations = np.zeros(approx_array_length)
-        uncertainties = np.zeros(approx_array_length)
+        approximations = np.zeros(approx_array_length, dtype=np.float64)
+        uncertainties = np.zeros(approx_array_length, dtype=np.float64)
         uncertainties[0] = np.inf # set uncertainty arbitrarily large for the error improvement comparison
 
         h_i = h_start
         approximations[0] = central_difference(func, x, h_i)
         best_guess = approximations[0]
-
+        
         for i in range(1, approx_array_length):            
             # Add in a new estimation with smaller step size
             h_i /= dec_factor
@@ -41,7 +40,6 @@ def ridders_method(func, x_ar, h_start, dec_factor, target_acc, approx_array_len
                 # Add the new approximation into the 'tree of estimations'
                 approximations[i-j-1] = ridders_equation(approximations[i-j-1], approximations[i-j], j, dec_factor) 
             uncertainties[i] = np.abs(approximations[0] - best_guess)
-
             # Test if we are below our target accuracy
             if (uncertainties[i] < target_acc) or (uncertainties[i] > uncertainties[i-1]):
                 derivative_array[ar_idx] = approximations[0]
@@ -50,8 +48,8 @@ def ridders_method(func, x_ar, h_start, dec_factor, target_acc, approx_array_len
             else:
                 best_guess = approximations[0]
 
-    return derivative_array     
-        
+    return derivative_array, unc_array  
+
 
 def diff_func():
     h_vals = [0.1, 0.01, 0.001]
