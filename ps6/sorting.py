@@ -24,8 +24,9 @@ def swap(a, idx1, idx2):
     a[idx1], a[idx2] = a[idx2], a[idx1]
     return a
 
-def sort_subarrays(a1, a2):
-    """Combines two subarrays, and returns them in a sorted fashion"""
+def sort_subarrays(a1, a2, k1, k2):
+    """Takes two subarrays 1,2 with indices a1, a2 and values k1, k2 and combines these
+    into array with indices a such that the k are sorted in ascending order"""
     N1 = len(a1)  
     N2 = len(a2)
 
@@ -42,7 +43,7 @@ def sort_subarrays(a1, a2):
     idx1 = 0
     idx2 = 0
     while True:
-        if a1[idx1] > a2[idx2]: 
+        if k1[idx1] > k2[idx2]: 
             # Then place the second element to the left of the first element and take 
             # one step to the right in the right sub-array
             a_sorted[idx1+idx2] = a2[idx2]
@@ -51,7 +52,7 @@ def sort_subarrays(a1, a2):
             # Then, if there are elements remaining in the right array, keep
             # placing them to the left as long as they're smaller
             if idx2 < N2: # need this if statement to save us from indexing errors in the while
-                while (a1[idx1] > a2[idx2]):
+                while (k1[idx1] > k2[idx2]):
                     a_sorted[idx1+idx2] = a2[idx2]  
                     idx2 += 1
 
@@ -84,9 +85,26 @@ def sort_subarrays(a1, a2):
 
 
 
-def merge_sort(a):
-    """Sorts the array or list ussing merge sort. Input can be a list or a 1d array
-    Output is always a 1d array"""
+def merge_sort(a=None, key=None):
+    """Sorts the array or list using merge sort. This function iteratively
+    builds up the array from single elements which are sorted by sort_subarrays
+    Note, in principle one should only provide either 'a' or 'key':
+
+    - If 'a' is provided, that array is sorted in ascending order, and returned 
+      by this function
+    - If 'key' is provided, this function returns the indices corresponding to the
+      order in which the array would be sorted
+    - If both 'a' and 'key' are provided, this function assumes 'key' has already
+      been previously shuffled, and just swaps indices of the preexisting 'a'
+   
+    RETURNS: 'a': numpy array
+    """
+    if key is not None:
+        key = np.array(key)
+
+    if a is None and key is not None:
+        a = np.arange(len(key))  
+
     a = np.array(a) 
     subsize = 1    
     N = len(a)
@@ -104,9 +122,13 @@ def merge_sort(a):
             # array with our indexing
             subarray1 = a[i*subsize: i*subsize+int(0.5*subsize)] # First half of the interval
             subarray2 = a[i*subsize+int(0.5*subsize): np.min(((i+1)*subsize, N))]
-            sorted_sub = sort_subarrays(subarray1, subarray2)
-            
-            #print(f'subsize = {subsize}, sorted sub:', sorted_sub)
+            if key is not None:
+                key1, key2 = key[subarray1] , key[subarray2]
+                sorted_sub = sort_subarrays(subarray1, subarray2, key1, key2)
+            else:
+                # we feed in 'subarrayx' twice because if we only sort a, a is its own key
+                sorted_sub = sort_subarrays(subarray1, subarray2, subarray1, subarray2)
+
             a[i*subsize:subsize*(i+1)] = sorted_sub
            
     return a
@@ -155,9 +177,18 @@ def test_merge():
     print('sorted array', selection_sort(to_sort))
     print('sorted array', merge_sort(to_sort))
 
+def test_key_sorting():
+    #key = np.array([5, 489, 1e5, 23, 48, 952, 684, 1e3])
+    key = np.array([5, 18, 68, 21, 86, 18, 320 ,86])
+    print('array to sort', key)
+    indxs = merge_sort(key=key)
+    print('indices to sort', indxs)
+    print('sorted array', key[indxs])
+
 def main():
-    test_sorting_algos()
+    #test_sorting_algos()
     #test_merge()
+    test_key_sorting()
 
 
 if __name__ == '__main__':
