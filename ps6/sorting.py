@@ -111,14 +111,12 @@ def merge_sort(a=None, key=None):
     is_sorted = False
     # Build up the array sorting arrays of increasing subsize
     while not is_sorted:
-        #print(subsize)
         subsize *= 2
         if subsize > N:
-           #subsize = N
             is_sorted = True # After this iteration, the array is sorted
 
         for i in range(int(np.ceil(N/subsize))):
-            # We need the max(.. , N) to ensure that we do not exceed the length of the 
+            # We need the min(.. , N) to ensure that we do not exceed the length of the 
             # array with our indexing
             subarray1 = a[i*subsize: i*subsize+int(0.5*subsize)] # First half of the interval
             subarray2 = a[i*subsize+int(0.5*subsize): np.min(((i+1)*subsize, N))]

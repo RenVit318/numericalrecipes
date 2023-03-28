@@ -23,7 +23,7 @@ def to_int32(x):
         bin32 = binx[-32:]
     else: 
         bin32 = (32 - len(binx)) * '0' + binx[2:]
-    return int(bin32, 2)
+    return int(bin32, 2) # The  '2' indicates the val is given in base2
 
 def mwc_base32(x, a):
     """"""
@@ -32,7 +32,7 @@ def mwc_base32(x, a):
     x = a*(x & np.uint64((2**32 - 1))) + (x >> np.uint64(32))
     return x
 
-def rng_from_mwc(N, x0=1898567, a=4294957665):
+def rng_from_mwc(N, x0=1898567, a=4294957665, return_laststate=False):
     """Sample N values using mwc_base32 with starting value x0
     The given value for a is an optimal seed. We use all 64-bits
     to generate the random number, but only return the last 32
@@ -41,8 +41,11 @@ def rng_from_mwc(N, x0=1898567, a=4294957665):
     for i in range(N):
         x0 = mwc_base32(x0, a)
         x[i] = to_int32(x0)
-    return x
-
+    x /= (2**32 - 1) # this ensures we return U(0,1)
+    if return_laststate:
+        return x, x0
+    else: 
+        return x
 
 def test_rng():
     # PARAMS

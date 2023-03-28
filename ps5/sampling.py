@@ -23,23 +23,31 @@ def rejection_sampling_old(func, rng, N, shift_x=None, shift_y=None):
 
     return uniform_dist[:N][not_rejected]
     
-def rejection_sampling(func, rng, N, shift_x=None, shift_y=None):
+def rejection_sampling(func, rng, N, 
+                       shift_x=lambda x: x,
+                       shift_y=lambda x: x,
+                       x0 = 4891653):
     """Sample a distribution using rejection sampling
     Expand documentation!"""
     
     sampled_points = np.zeros(N)
+    num_tries = 0 # For performance testing
     for i in range(N):
         not_sampled = True
+
+        # Keep sampling until we find a x,y pair that fits
         while not_sampled:
-            x, y = rng(2)
-            if shift_x is not None:
-                x = shift_x(x)
-            if shift_y is not None:
-                y = shift_y(y)
-        
+            numbers, x0 = rng(2, x0=x0, return_laststate=True) # This is now U(0,1)    
+             
+            x = shift_x(numbers[0])
+            y = shift_y(numbers[1])
+            num_tries += 1
+            #print(x, y, func(x) )
             if y < func(x):
                 sampled_points[i] = x
                 not_sampled = False
+
+    print(f'Average No. tries: {num_tries/N:.1f}')
     return sampled_points
 
 def gauss(x, sigma, mu):
@@ -55,12 +63,12 @@ def test_sampling():
     #### PARAMS
     N = int(1e5)
     ####
-    func = lambda x: voigt(x, 1, 0, 1, 0)
-    shift_x = lambda x: (x-0.5) * 2
+    func = lambda x: x
+    shift_x = lambda x: x 
     sampled = rejection_sampling(func, rng_from_mwc, N, shift_x)
 
-    x = np.linspace(-5, 5)
-    y = voigt(x, 1, 0, 1, 0)
+    x = np.linspace(0, 1)
+    y = x
     
     plt.hist(sampled, density=True, bins=25)
     plt.plot(x, y)
