@@ -70,14 +70,10 @@ def rejection_sampling(func, rng, N,
             x = shift_x(numbers[0])
             y = shift_y(numbers[1])
             num_tries += 1
-            print(x, y, func(x) )
             if y < func(x):
                 sampled_points[i] = x
                 not_sampled = False
-
-        if (i%100) == 0:
-            print(i)
-
+    
     print(f'Average No. tries: {num_tries/N:.1f}')
     return sampled_points
 
@@ -272,7 +268,8 @@ def false_position(func, bracket, target_x_acc=1e-3, target_y_acc=1e-8, max_iter
             best_root = [a,b][np.argmin(np.abs([fa,fb]))]
             return best_root, i+1
 
-        c = b + fb * ((b-a)/(fa-fb))
+        #c = b + fb * ((b-a)/(fa-fb))
+        c = a - fa*((a-b)/(fa-fb))
         fc = func(c)
 
         if np.abs((fc-fb)/fc) < target_y_acc or np.abs((fc-fa)/fc) < target_y_acc:

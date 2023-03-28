@@ -67,17 +67,17 @@ def full_run():
         n = 10**(n_power)
         equilibrium2_func = lambda x: equilibrium2(x, Z, Tc, psi, n, A, xi, k, aB) 
         t0 = time.time()
-        root, num_iter = rootfinder(equilibrium2_func, [Tmin, Tmax2], target_y_acc=1e-10)
+        root, num_iter = rootfinder(equilibrium2_func, [Tmin, Tmax2], target_y_acc=1e-10, target_x_acc=1e-3)
         t1 = time.time()
         y_root = equilibrium2_func(root)
         #print(f'n={n:.0E}cm^-3\nRoot Found at T={root:.2E} K ({y_root:.2E}).\nRoot Finding Algorithm Took {num_iter} Iterations over {t1-t0:.2E} s')
 
-        x = np.linspace(Tmin, Tmax2, 1000)
+        x = np.logspace(np.log10(Tmin), np.log10(Tmax2), 5000)
         y = equilibrium2_func(x)
 
         plt.plot(x, np.abs(y), c=f'C{i}',   label=rf'$n$ = {n:.0E} cm$^{-3}$')
-        plt.scatter(root, y_root, c=f'C{i}', marker='X')
-
+        plt.scatter(root, np.abs(y_root), c=f'C{i}', marker='X', zorder=0)
+        print(root, y_root)
         table_txt += rf"$10^{{{n_power}}}$ & {root:.2E} & {y_root:.2E} & {num_iter} & {t1-t0:.2}\\" +'\n'
 
     plt.xlabel(r'$^{10}\log~T$')
@@ -86,10 +86,12 @@ def full_run():
 
     plt.xlim(Tmin, Tmax2)
     plt.xscale('log')
+    plt.yscale('log')
     plt.legend()
+    #plt.ylim(-1e-16, 1e-16)
     plt.savefig('results/complex_hiiregion_roots.png', bbox_inches='tight')
     #plt.show()
-    
+    print(table_txt)
     with open('results/complex_hiiregion_table.txt', 'w') as file:
         file.write(table_txt)
 

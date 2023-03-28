@@ -5,7 +5,6 @@ from rng import rng_from_mwc
 from plotting import hist, set_styles
 import time
 
-
 def n(x, A, Nsat, a, b, c):
     """Density profile of the spherical distribution of 
     satellite galaxies around a central as a function of
@@ -42,23 +41,42 @@ def full_run():
     A = Nsat/volume_integral
     print(f'The volume integral evaluated from 0 to 5 returns: {volume_integral:.6f}')
     print(f'Therefore we need a normalization constant A = {A:.2f}')
-    results_txt += f"{A}\n"
+    results_txt += f"{volume_integral:.2f}\n{A:.2f}\n"
+
 
     # 1b. Simulate the distribution
     rng = rng_from_mwc
-    log_distribution = lambda x: np.log10(4*np.pi*n(10**x, A, Nsat, a, b, c)/Nsat) #p(x)dx = N(x)dx/Nsat
-   
-    log_ymax = log_distribution(np.log10(sample_min_x))
-    log_ymin = log_distribution(np.log10(x_max))
-    shift_x = lambda x: np.log10(x * (x_max - sample_min_x) + sample_min_x)
-    shift_y = lambda y: y * (log_ymax - log_ymin) + log_ymin  
+    log_distribution = lambda x: 4*np.pi*10**(2*x)*n(10**x, A, Nsat, a, b, c)/Nsat #p(x)dx = N(x)dx/Nsat
     
+    # Find maximum of this distribution
+    x = np.linspace(sample_min_x, x_max, 1000)
+    
+    
+    # Plot this distribution in linear space
+    y = log_distribution(np.log10(x))
+    log_dist_max = np.max(y)
+    results_txt += f"{log_dist_max:.2f}\n"
+    plt.plot(x, y, label=r'$N(x)dx/\left<N_{sat}\right>$')
+    plt.axhline(y=0, c='black', ls='--')
+    plt.axhline(y=log_dist_max, c='red', label=f'Distribution Max: {log_dist_max:.2f}')
+    plt.xlim(x_min, x_max)
+    plt.xlabel(r'$x \equiv r/r_{vir}$')
+    plt.ylabel(r'$p(x)dx$')
+    plt.title('Linear Satellite Number Distribution')
+    plt.legend()
+    plt.savefig('results/pxdx.png', bbox_inches='tight')
+    plt.clf()
+
+    shift_x = lambda x: x * (np.log(x_max) + 4) - 4
+    shift_y = lambda y: y * log_dist_max
+
     print('Sampling Distribution')
     sampled_points = rejection_sampling(log_distribution, rng, N_sample, shift_x=shift_x, shift_y=shift_y)
     sampled_points = 10**sampled_points
 
     # Plotting
     bin_heights, bin_edges = hist(sampled_points, sample_min_x, x_max, nbins, log=True)
+    
     bin_centers = np.zeros(len(bin_edges)-1)
     for i in range(bin_centers.shape[0]):
         bin_centers[i] = bin_edges[i] + 0.5*(bin_edges[i+1] - bin_edges[i])
@@ -66,12 +84,11 @@ def full_run():
     x = np.linspace(sample_min_x, x_max, 1000)
     y = log_distribution(np.log10(x))
 
-    plt.step(np.log10(bin_centers), np.log10(bin_heights/100), label='Sampled Distribution')
-    #plt.step(bin_centers, bin_heights/100, label='Sampled Distribution')           
-    plt.plot(np.log10(x), y, label='Analytical Function')
+    plt.step(np.log10(bin_centers), np.log10(bin_heights/1000), label='Sampled Distribution')         
+    plt.plot(np.log10(x), np.log10(y), label='Analytical Function')
     plt.xlabel(r'$^{10}\log~r/r_{vir}$')
     plt.ylabel(r'$^{10}\log~p(x)dx$')
-    plt.title('Distribution of Satellite Galaxies around a Massive Central')
+    plt.title('Sampled Distribution Histogram')
 
     plt.ylim(bottom=-5)
 
@@ -84,15 +101,14 @@ def full_run():
     print('Shuffling Sample..')
     random_keys = rng(N=N_sample)
     random_idxs = merge_sort(key=random_keys)
-    print(random_idxs)
     
     random_sample_idxs = random_idxs[:num_random_sample]
     random_sample = sampled_points[random_sample_idxs]
-    print(random_sample)
+
     # Step 2: Order these 100 galaxies by radius
     random_sample_ordered_idxs = merge_sort(key=random_sample)
     random_sample_ordered = random_sample[random_sample_ordered_idxs]
-    print(random_sample_ordered)
+
     # 'Cumulative Distribtuion Function'
     y = np.arange(num_random_sample)/num_random_sample
 
@@ -100,15 +116,13 @@ def full_run():
     y = np.append(y, 1)
     random_sample_ordered = np.append(random_sample_ordered, x_max)
 
-    plt.plot(random_sample_ordered, y)
-    plt.xlim(x_min, x_max)
+    plt.plot(np.log10(random_sample_ordered), y)
+    plt.xlim(np.log10(sample_min_x), np.log10(x_max))
     plt.ylim(0, 1.1)
-    plt.xlabel(r'$r/r_{vir}$')
+    plt.xlabel(r'$^{10}\log~r/r_{vir}$')
     plt.ylabel('Cumulative Percentage')
     plt.title(f'CDF of Satellite Galaxies (N = {num_random_sample})') 
     plt.savefig('results/satellite_galaxies_cdf')
-    #plt.show()
-
 
     # 1d. 
     to_diff = lambda x: n(x, A, Nsat, a, b, c)

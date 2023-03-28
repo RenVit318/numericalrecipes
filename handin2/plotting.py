@@ -13,7 +13,6 @@ def set_styles():
 
 def hist(x, binmin, binmax, nbins, log=False):
     """"""
-
     if log:
         bin_edges = np.logspace(np.log10(binmin), np.log10(binmax), nbins+1)
     else:
@@ -22,7 +21,7 @@ def hist(x, binmin, binmax, nbins, log=False):
     histogram = np.zeros(nbins)
     for i in range(nbins):
         bin_mask = (x>bin_edges[i]) * (x<bin_edges[i+1])
-        histogram[i] = len(x[bin_mask])
+        histogram[i] = len(x[bin_mask])#/(bin_edges[i+1]-bin_edges[i])
 
     return histogram, bin_edges
     

@@ -1,5 +1,6 @@
 This file contains all results to be extracted for the report
-9.19484836060374
--0.625328061833
+10.88
+9.19
+2.68-0.625328061833
 2.220E-14
 -0.625328061833
