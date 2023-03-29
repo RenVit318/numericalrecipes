@@ -10,7 +10,12 @@ import numpy as np
 
 # INTEGRATION
 def romberg_integration(func, a, b, order, open_formula=False):
-    """Integrate a function using Romberg Integration"""
+    """Integrate a function, func, using Romberg Integration over the interval [a,b]
+    This function usually sets h_start = b-a to sample from the widest possible interval.
+    If open_formula is set to True, it assumes the function is undefined at either a or b
+    and h_start is set to (b-a)/2.
+    This function returns the best estimate for the integrand
+    """
     # initiate all parameters
     r_array = np.zeros(order)
     h = b - a
@@ -23,7 +28,6 @@ def romberg_integration(func, a, b, order, open_formula=False):
     else:
         r_array[0] = 0.5*h*(func(b) - func(a))
         start_point = 1
-
     
     # First iterations to fill out estimates of order m
     for i in range(start_point, order):
@@ -55,8 +59,13 @@ def rejection_sampling(func, rng, N,
                        shift_x=lambda x: x,
                        shift_y=lambda x: x,
                        x0 = 4891653):
-    """Sample a distribution using rejection sampling
-    Expand documentation!"""
+    """Sample a 1D distribution using rejection sampling. This function generates
+    two random numbers using the provided rng. It then assigns the first value as
+    'x' and shifts it using the shift_x function, and assigns the second value as
+    'y' and shifts it using the shift_y function. If y<func(x) the point is accepted
+    Repeat this until we have N points, and return these
+    x0 is used as a starting seed for the rng
+    """
     
     sampled_points = np.zeros(N)
     num_tries = 0 # For performance testing
@@ -70,6 +79,7 @@ def rejection_sampling(func, rng, N,
             x = shift_x(numbers[0])
             y = shift_y(numbers[1])
             num_tries += 1
+            print(x, y, func(x))
             if y < func(x):
                 sampled_points[i] = x
                 not_sampled = False
@@ -84,24 +94,16 @@ def central_difference(func, x, h):
     return (func(x+h) - func(x-h))/(2.*h)   
 
 def ridders_equation(D1, D2, j, dec_factor):
+    """Ridders Equation used to combine two estimates at different h"""
     j_factor = dec_factor**(2.*(j+1.))
     return (j_factor * D2 - D1)/(j_factor - 1)
     
 
 def ridders_method(func, x_ar, h_start, dec_factor, target_acc, approx_array_length=15):
     """Compute the derivative of a function at a point, or points x using Ridder's Method
-
-    Inputs:
-        func:
-        x_ar
-        h_start
-        dec_factor
-        target_acc
-        approx_array_length
-
-    Outputs:
-        
-
+    The function iteratively adds in more estimates at a lower h until it achieves the provided
+    target accuracy. It then returns the best estimate, and the uncertainty on this, which is 
+    defined as the difference between the current and previous best estimates
     """
     derivative_array = np.zeros_like(x_ar, dtype=np.float64)
     unc_array = np.zeros_like(x_ar, dtype=np.float64)
@@ -250,10 +252,6 @@ def false_position(func, bracket, target_x_acc=1e-3, target_y_acc=1e-8, max_iter
     """Given a function f(x) and a bracket [a,b], this function returns
     a value c within that interval for which f(c) ~= 0 using the false
     position method. Guaranteed to converge, slow but faster than bisection.
-
-    Inputs:
-
-    Outputs:
     """
     a, b = bracket
     fa, fb = func(a), func(b) 
@@ -283,10 +281,8 @@ def false_position(func, bracket, target_x_acc=1e-3, target_y_acc=1e-8, max_iter
             # Then the new interval becomes c, b
             a, fa = c, fc
         else:
-            print("Warning! Bracket seems to have diverged")
-            return c, i+1
-
-        
+            print("Warning! Bracket might have diverged")
+            return c, i+1      
 
     print("Maximum number of iterations reached")
     return c, i

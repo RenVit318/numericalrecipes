@@ -67,7 +67,7 @@ def full_run():
         n = 10**(n_power)
         equilibrium2_func = lambda x: equilibrium2(x, Z, Tc, psi, n, A, xi, k, aB) 
         t0 = time.time()
-        root, num_iter = rootfinder(equilibrium2_func, [Tmin, Tmax2], target_y_acc=1e-10, target_x_acc=1e-3)
+        root, num_iter = rootfinder(equilibrium2_func, [Tmin, Tmax2], target_y_acc=1e-10, target_x_acc=1e-3 )
         t1 = time.time()
         y_root = equilibrium2_func(root)
         #print(f'n={n:.0E}cm^-3\nRoot Found at T={root:.2E} K ({y_root:.2E}).\nRoot Finding Algorithm Took {num_iter} Iterations over {t1-t0:.2E} s')
