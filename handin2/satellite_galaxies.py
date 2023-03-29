@@ -4,9 +4,8 @@ from ancillary import romberg_integration, rejection_sampling, ridders_method, m
 from rng import rng_from_mwc
 from plotting import hist, set_styles
 
-
 def n(x, A, Nsat, a, b, c):
-    """Density profile of the spherical distribution of 
+    """Density profile of the spherical distribution of
     satellite galaxies around a central as a function of
     x = r/r_vir. The values given come from hand-in 2"""
     return A*Nsat*((x/b)**(a-3))*np.exp(-(x/b)**c)
@@ -28,8 +27,8 @@ def full_run():
     N_sample = int(1e4)
     sample_min_x = 1e-4
     nbins = 20
-    num_random_sample = 100 
-    
+    num_random_sample = 100
+
     results_txt = "This file contains all results from question 1\n"
     set_styles()
     #######
@@ -42,7 +41,6 @@ def full_run():
     print(f'Therefore we need a normalization constant A = {A:.2f}')
     results_txt += f"{volume_integral:.2f}\n{A:.2f}\n"
 
-
     # 1b. Simulate the distribution
     # Set Nsat = 1 because we divide n(x) by Nsat
     rng = rng_from_mwc
@@ -52,7 +50,7 @@ def full_run():
     x = np.linspace(sample_min_x, x_max, 1000)
     nx = log_distribution(np.log10(x))
     log_dist_max = np.max(nx)
-    
+
     # Plot this distribution in linear space for investigation purposes
     results_txt += f"{log_dist_max:.2f}\n"
     plt.plot(x, nx, label=r'$N(x)dx/\left<N_{sat}\right>$')
@@ -80,7 +78,7 @@ def full_run():
     for i in range(bin_centers.shape[0]):
         bin_centers[i] = bin_edges[i] + 0.5*(bin_edges[i+1] - bin_edges[i])
 
-    plt.step(np.log10(bin_centers), np.log10(bin_heights/1000), label='Sampled Distribution')         
+    plt.step(np.log10(bin_centers), np.log10(bin_heights/1000), label='Sampled Distribution')
     plt.plot(np.log10(x), np.log10(nx), label='Analytical Function')
     plt.xlabel(r'$^{10}\log~r/r_{vir}$')
     plt.ylabel(r'$^{10}\log~p(x)dx$')
@@ -90,12 +88,12 @@ def full_run():
     plt.savefig('results/satellite_galaxies_pdf.png', bbox_inches='tight')
     plt.clf()
 
-    # 1c. 
+    # 1c.
     # Step 1: Order a list of random numbers, select the first 100
     print('Shuffling Sample..')
     random_keys = rng(N=N_sample)
     random_idxs = merge_sort(key=random_keys)
-    
+
     random_sample_idxs = random_idxs[:num_random_sample]
     random_sample = sampled_points[random_sample_idxs]
 
@@ -113,10 +111,10 @@ def full_run():
     plt.ylim(0, 1.1)
     plt.xlabel(r'$^{10}\log~r/r_{vir}$')
     plt.ylabel('Cumulative Percentage')
-    plt.title(f'CDF of Satellite Galaxies (N = {num_random_sample})') 
+    plt.title(f'CDF of Satellite Galaxies (N = {num_random_sample})')
     plt.savefig('results/satellite_galaxies_cdf')
 
-    # 1d. 
+    # 1d.
     to_diff = lambda x: n(x, A, Nsat, a, b, c)
     x = [1]
     dndx, diff_unc = ridders_method(to_diff, x, 0.1, 2, 1e-12)
@@ -126,11 +124,11 @@ def full_run():
     print(f'The analytical derivative of n(x) at x = {x[0]} is {dndx_analytical:.12f}')
 
     results_txt += f'{dndx[0]:.12f}\n{diff_unc[0]:.3E}\n{dndx_analytical:.12f}'
-    
+
     with open('results/satellite_galaxies_results.txt', 'w') as file:
         file.write(results_txt)
-   
-    
+
+
 
 def plot_distribution(A):
     x = np.linspace(0.1, 5, 100)
