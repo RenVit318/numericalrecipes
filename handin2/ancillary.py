@@ -77,7 +77,7 @@ def rejection_sampling(func, rng, N,
             x = shift_x(numbers[0])
             y = shift_y(numbers[1])
             num_tries += 1
-            print(x, y, func(x))
+            
             if y < func(x):
                 sampled_points[i] = x
                 not_sampled = False
@@ -103,8 +103,8 @@ def ridders_method(func, x_ar, h_start, dec_factor, target_acc, approx_array_len
     target accuracy. It then returns the best estimate, and the uncertainty on this, which is
     defined as the difference between the current and previous best estimates
     """
-    derivative_array = np.zeros_like(x_ar, dtype=np.float64)
-    unc_array = np.zeros_like(x_ar, dtype=np.float64)
+    derivative_array = np.zeros(len(x_ar), dtype=np.float64)
+    unc_array = np.zeros(len(x_ar), dtype=np.float64)
 
     for ar_idx in range(len(x_ar)):
         x = x_ar[ar_idx]
@@ -244,7 +244,6 @@ def merge_sort(a=None, key=None):
 
     return a
 
-
 # ROOT FINDING
 def false_position(func, bracket, target_x_acc=1e-10, target_y_acc=1e-10, max_iter=int(1e5)):
     """Given a function f(x) and a bracket [a,b], this function returns
@@ -259,8 +258,7 @@ def false_position(func, bracket, target_x_acc=1e-10, target_y_acc=1e-10, max_it
         raise ValueError("The provided bracket does not contain a root")
 
     for i in range(max_iter):
-        print(a, b, fa, fb)
-
+        c = b
         c = a - fa*((a-b)/(fa-fb))
         fc = func(c)
 
@@ -285,3 +283,31 @@ def false_position(func, bracket, target_x_acc=1e-10, target_y_acc=1e-10, max_it
 
     print("Maximum number of iterations reached")
     return c, i
+
+def newton_raphson(func, x, target_x_acc=1e-10, target_y_acc=1e-10, max_iter=int(1e5)):
+    """Given a function f(x) and a starting point x0, this function returns
+    a value c within that interval for which f(c) ~= 0 using the Newton Raphson
+    method. This method is prone to diverge, but can converge very quick.
+    """
+    for i in range(max_iter):
+        fx = func(x)
+        if np.abs(func(x)) < target_y_acc:
+            return x, i
+
+        df_dx = ridders_method(func, [x], 0.1, 2, 1e-10)[0][0]
+        delta_x = fx/df_dx
+
+        if np.abs(df_dx) < target_x_acc:
+            return x, i
+        x -= delta_x
+    print("Maximum number of iterations reached")
+    return x, i
+
+def FP_NR(func, bracket, target_x_acc=1e-10, target_y_acc=1e-10, fp_accuracy=1e-5, max_iter=int(1e5)):
+    """Finds a root of a function by first applying the False Position algorithm
+    to get close to the root, and then switches to Newton-Raphson to accurately
+    find its value
+    """
+    x_close, i_fp = false_position(func, bracket, fp_accuracy, fp_accuracy, max_iter)
+    root, i_nr = newton_raphson(func, x_close, target_x_acc, target_y_acc, max_iter-i_fp)
+    return root, i_fp+i_nr

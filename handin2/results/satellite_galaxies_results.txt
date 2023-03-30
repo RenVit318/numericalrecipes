@@ -1,7 +1,0 @@
-This file contains all results from question 1
-10.88
-9.19
-2.68
--0.625328061833
-2.220E-14
--0.625328061833

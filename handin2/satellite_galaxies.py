@@ -43,7 +43,7 @@ def full_run():
 
     # 1b. Simulate the distribution
     # Set Nsat = 1 because we divide n(x) by Nsat
-    rng = rng_from_mwc
+    rng = rng_from_mwc  
     log_distribution = lambda x: 4*np.pi*10**(2*x)*n(10**x, A, 1, a, b, c)
 
     # Find maximum of this distribution

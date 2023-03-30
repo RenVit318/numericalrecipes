@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from ancillary import false_position
+from ancillary import FP_NR
 from plotting import set_styles
+import timeit
 
 
 def equilibrium1(T, Z, Tc, psi, k):
@@ -29,7 +30,7 @@ def full_run():
     Tmin = 1
     Tmax1 = 1e7
     Tmax2 = 1e15
-    rootfinder = false_position
+    rootfinder = FP_NR
     ####
     set_styles()
 
@@ -39,7 +40,8 @@ def full_run():
     root, num_iter = rootfinder(equilibrium1_func, [Tmin, Tmax1], target_x_acc=0.1, target_y_acc=1e-15)
     t1 = time.time()
     y_root = equilibrium1_func(root)
-    input()
+    print(f'Root found for equation 1 using FP_NR:\nT={root:.2E}K (f(T)={y_root:.8E}\nNum Iter: {num_iter}, time:{t1-t0:.2E}s\n')
+
     # Plot the function
     x = np.linspace(Tmin, Tmax1, 1000)
     y = equilibrium1_func(x)
@@ -65,7 +67,7 @@ def full_run():
         n = 10**(n_power)
         equilibrium2_func = lambda x: equilibrium2(x, Z, Tc, psi, n, A, xi, k, aB)
         t0 = time.time()
-        root, num_iter = rootfinder(equilibrium2_func, [Tmin, Tmax2], target_y_acc=1e-10, target_x_acc=1e-3 )
+        root, num_iter = rootfinder(equilibrium2_func, [Tmin, Tmax2], target_y_acc=1e-10, target_x_acc=1e-10)
         t1 = time.time()
         y_root = equilibrium2_func(root)
 
@@ -73,12 +75,11 @@ def full_run():
         y = equilibrium2_func(x)
 
         plt.plot(x, np.abs(y), c=f'C{i}',   label=rf'$n$ = {n:.0E} cm$^{-3}$')
-        plt.scatter(root, np.abs(y_root), c=f'C{i}', marker='X', zorder=0)
+        plt.scatter(root, np.abs(y_root), label=f'T={root:.2E}', c=f'C{i}', marker='X', zorder=0)
         table_txt += rf"$10^{{{n_power}}}$ & {root:.2E} & {y_root:.2E} & {num_iter} & {t1-t0:.2}\\" +'\n'
-        input()
-
+        print(f'Root found for equation 2, n=10^{n_power} using FP_NR:\nT={root:.2E}K (f(T)={y_root:.8E}\nNum Iter: {num_iter}, time:{t1-t0:.2E}s\n')
     plt.xlabel(r'$^{10}\log~T$')
-    plt.ylabel(r'$\propto\,\Gamma~-~\Lambda$')
+    plt.ylabel(r'$\propto\,^{10}\log|\Gamma~-~\Lambda$|')
     plt.title('Complex HII Region Equilibrium')
 
     plt.xlim(Tmin, Tmax2)
@@ -86,9 +87,10 @@ def full_run():
     plt.yscale('log')
     plt.legend()
     plt.savefig('results/complex_hiiregion_roots.png', bbox_inches='tight')
+
+    table_txt = table_txt[:-4] # remove the last \\\n
     with open('results/complex_hiiregion_table.txt', 'w') as file:
         file.write(table_txt)
-
 
 
 

@@ -6,11 +6,11 @@ def to_int32(x):
     # First two chars are '0b' can ignore these
     if len(binx) > 33:
         bin32 = binx[-32:]
-    else: 
+    else:
         bin32 = (32 - len(binx)) * '0' + binx[2:]
     return int(bin32, 2) # The  '2' indicates the val is given in base2
 
-def mwc_base32(x, a):
+def mwc_base32(x, a=4294957665):
     """"""
     # Set the first 32 bits to zero
     x = np.uint64(x)
@@ -29,5 +29,12 @@ def rng_from_mwc(N, x0=1898567, a=4294957665, return_laststate=False):
     x /= (2**32 - 1) # this ensures we return U(0,1)
     if return_laststate:
         return x, x0
-    else: 
+    else:
         return x
+
+
+
+
+
+
+

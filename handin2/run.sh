@@ -9,10 +9,12 @@ fi
 echo 'Running Q1: Satellite Galaxies..'
 python3 satellite_galaxies.py
 
+echo ''
 echo 'Running Q2: Heating and Cooling of HII Regions..'
+echo ''
 python3 hii_regions.py
 
 echo 'Start Making LaTeX PDF..'
 
-#pdflatex latex/main.tex
-#pdflatex latex/main.tex
+pdflatex latex/main.tex
+pdflatex latex/main.tex
