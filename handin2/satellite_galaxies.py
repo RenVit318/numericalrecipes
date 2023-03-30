@@ -78,7 +78,7 @@ def full_run():
     for i in range(bin_centers.shape[0]):
         bin_centers[i] = bin_edges[i] + 0.5*(bin_edges[i+1] - bin_edges[i])
 
-    plt.step(np.log10(bin_centers), np.log10(bin_heights/1000), label='Sampled Distribution')
+    plt.step(np.log10(bin_centers), np.log10(bin_heights/10000), label='Sampled Distribution')
     plt.plot(np.log10(x), np.log10(nx), label='Analytical Function')
     plt.xlabel(r'$^{10}\log~r/r_{vir}$')
     plt.ylabel(r'$^{10}\log~p(x)dx$')
