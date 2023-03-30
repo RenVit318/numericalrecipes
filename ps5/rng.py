@@ -15,17 +15,19 @@ def lcg(x, a, c, m):
     """
     return (a*x + c) % m
 
+import numpy as np
+
 def to_int32(x):
     """Takes any integer x, and returns the last 32 bits"""
     binx = bin(np.uint64(x))
     # First two chars are '0b' can ignore these
     if len(binx) > 33:
         bin32 = binx[-32:]
-    else: 
+    else:
         bin32 = (32 - len(binx)) * '0' + binx[2:]
     return int(bin32, 2) # The  '2' indicates the val is given in base2
 
-def mwc_base32(x, a):
+def mwc_base32(x, a=4294957665):
     """"""
     # Set the first 32 bits to zero
     x = np.uint64(x)
@@ -44,18 +46,48 @@ def rng_from_mwc(N, x0=1898567, a=4294957665, return_laststate=False):
     x /= (2**32 - 1) # this ensures we return U(0,1)
     if return_laststate:
         return x, x0
-    else: 
+    else:
         return x
+
+def xor_64bit(x, a1=21, a2=35, a3=4):
+    """Generate a random number using 64-bit XOR-shift. The values
+    for a1, a2, a3 are set following the recommendation from the lecture.
+    x has to be a 64 bit integer
+    """
+    if not type(x) == np.int64:
+        x = np.int64(x)
+    # Number generation
+    x = x or (x >> a1)
+    x = x or (x << a2)
+    x = x or (x >> a3)
+
+    return x
+
+def rng_xor64bit_mwcbase32(N, x0=1898567):
+    """Combines 64-bit XOR-shift and base 32 multiply with carry to
+    generate random numbers. Uses standard values for both methods"""
+    x = np.zeros(N)
+    x0_64xor = np.int64(x0)
+    for i in range(N):
+        x0_64xor = xor_64bit(x0_64xor)
+        x0_mwc = mwc_base32(x0_64xor)
+        x[i] = to_int32(x0_mwc)
+    x /- (2**32 - 1) # this ensures we return U(0,1)
+    if return_laststate:
+        return x, x0_mwc
+    else:
+        return x
+
 
 def test_rng():
     # PARAMS
-    N = int(1e4)
+    N = int(1e6)
     a = 4294957665
     c = 1013904233
     m = 2**32
     x0 = 256481
     #rng = lambda x: lcg(x, a, c, m)
-    rng = lambda x: mwc_base32(x, a)
+    rng = rng_xor64bit_mwcbase32
     ##### 
     
     x = rng_from_mwc(N)

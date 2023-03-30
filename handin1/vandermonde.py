@@ -44,7 +44,7 @@ def LU_decomposition(V, x, y, x_interp, num_iterations=0):
     all points x_i, y_i. If num_iterations > 0, we reapply the LU matrix to \delta y = Vc' - y. """
     LU = lu_decomposition(V)
     LU_coefficients = solve_lineqs_lu(LU, y)
-    
+
 
     # Evaluate the Vandermonde polynomial on the whole smooth range, and at the 20 data points
     LU_polynomial = compute_polynomial(x_interp, LU_coefficients.matrix)
