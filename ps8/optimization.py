@@ -6,8 +6,30 @@ from matrix_class import Matrix
 from ridder import ridders_method
 from lu_decomp import lu_decomposition, solve_lineqs_lu
 
+
+def hist(x, binmin, binmax, nbins, log=False):
+    """Copied From HandIn2s"""
+    if log:
+        bin_edges = np.logspace(np.log10(binmin), np.log10(binmax), nbins+1)
+    else:
+        bin_edges = np.linspace(binmin, binmax, nbins+1)
+    
+    histogram = np.zeros(nbins)
+    for i in range(nbins):
+        bin_mask = (x>bin_edges[i]) * (x<bin_edges[i+1])
+        if log:
+            histogram[i] = len(x[bin_mask])/(np.log10(bin_edges[i+1])-np.log10(bin_edges[i]))
+        else:
+            histogram[i] = len(x[bin_mask])/(bin_edges[i+1] - bin_edges[i])
+
+    return histogram, bin_edges
+    
 def func(x, a, b, c):
     return a/x + b*x + c
+
+def schechter(M, M_char, alpha, phi_star):
+    """Computes the Schechter function for M = log_10(m)"""
+    return np.log(10) * phi_star * np.power(10, (M-M_char)*(1+alpha)) * np.exp(-np.power(10, M-M_char))
 
 def compute_chi_sq(x, y, sigma, func, params):
     """Compute the chi squared value between N points x, y with
@@ -88,7 +110,7 @@ def beta_k(dchi_dp):
     """"""
     return -0.5 * dchi_dp
 
-def levenberg_marquardt(xdata, ydata, sigma, func, guess,
+def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True, 
                         w=10, lmda=1e-3, chi_acc=0.1, max_iter=int(1e5), # fit procedure params
                         h_start=0.1, dec_factor=2, target_acc=1e-10): # derivative params
     """"""
@@ -103,13 +125,18 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess,
     # Can do this beforehand because the derivatives never change
     # if the functions depend linearly on the parameters
     A = make_alpha_matrix(xdata, sigma, func, params, h_start, dec_factor, target_acc)
-
+    print(A.matrix)
     for iteration in range(max_iter):
-        A_weighted = copy.deepcopy(A) # ensure no pointing goes towards A
-        A_weighted = weigh_A_diagonals(A_weighted, lmda) # Make \alpha_prime
+        if linear:
+            A_weighted = copy.deepcopy(A) # ensure no pointing goes towards A
+            A_weighted = weigh_A_diagonals(A_weighted, lmda) # Make \alpha_prime
+        else:
+            A = make_alpha_matrix(xdata, sigma, func, params, h_start, dec_factor, target_acc)
+            A_weighted = weigh_A_diagonals(A, lmda)          
+        
         
         b.matrix = make_nabla_chi2(xdata, ydata, sigma, func, params, h_start, dec_factor, target_acc)
-          
+        print(b.matrix)
         # Solve the set of linear equations for \delta p with LU decomposition
         LU = lu_decomposition(A_weighted, implicit_pivoting=True)
         delta_p = solve_lineqs_lu(LU, b).matrix
@@ -118,6 +145,8 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess,
         new_params = params + delta_p.flatten()
         new_chi2 = compute_chi_sq(xdata, ydata, sigma, func, new_params)
         delta_chi2 = new_chi2 - chi2
+        print(params)
+        print(delta_chi2)
         if delta_chi2 >= 0: # reject the solution
             lmda = w*lmda
             continue
@@ -131,6 +160,36 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess,
         lmda = lmda/w        
     print("Max Iterations Reached")
     return params, new_chi2, iteration+1
+
+
+def galaxy_smf():
+    """Tutorial 8: Problem Set 2"""
+    data = np.genfromtxt('smf_data.txt')
+    n, bin_edges = hist(data, 8.5, 12, 20, log=False)
+    ydata = n/ len(data[(data>8.5) * (data<12)]) # Normalization
+
+    bin_centers = np.zeros(len(bin_edges)-1) # Center each point
+    for i in range(len(bin_centers)):
+        bin_centers[i] = bin_edges[i] + 0.5*(bin_edges[i+1] - bin_edges[i])
+
+    # The below is wrong because we are working with counted data -> poission distribution
+    # but what happens if we use levenberg_marquardt with sigma=1?
+    # Fit curves
+    guess = [1, 9, 1]
+    popt, pcov = curve_fit(schechter, bin_centers, ydata, p0=guess, sigma=np.repeat(1, len(ydata)))
+    fit_params, fit_chi2, num_iter = levenberg_marquardt(bin_centers, ydata, 1, schechter, guess, chi_acc=0.1, linear=False)
+    print(popt)
+    print(fit_params)
+    
+    # Plotting
+    x = np.linspace(8, 12, 1000)
+    plt.step(bin_centers, ydata)
+    plt.scatter(bin_centers, ydata, c='black', marker='x', zorder=5)
+
+    plt.plot(x, schechter(x, *popt), c='red', ls='--', label='Scipy')
+    plt.plot(x, schechter(x, *fit_params), c='blue', ls='--', label=f'Own Fit, chi^2 = {fit_chi2}')
+    plt.legend()
+    plt.show()
 
 def test_opti():
     params = [2, 1, 2]
@@ -147,7 +206,7 @@ def test_opti():
 
     # Optimization
     guess = [0.,0.,0.]
-    fit_params, fit_chi2, num_iter = levenberg_marquardt(xpoints.flatten(), data.flatten(), sigma, func, guess, chi_acc=1e-10)
+    fit_params, fit_chi2, num_iter = levenberg_marquardt(xpoints.flatten(), data.flatten(), sigma, func, guess, chi_acc=1e-10, linear=False)
     print('Own fit done! Num Iterations: ', num_iter)
     popt, pcov = curve_fit(func, xpoints.flatten(), data.flatten(), p0=guess, sigma=np.repeat(sigma, num_x*N))
     scipy_chi2 = compute_chi_sq(xpoints, data, sigma, func, popt)
@@ -170,9 +229,9 @@ def test_opti():
 
 
 
-
 def main():
-    test_opti()
+    #test_opti()
+    galaxy_smf()
 
 if __name__ == '__main__':
     main()
