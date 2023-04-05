@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sorting import merge_sort
+from ancillary import merge_sort, ridders_method
+from minimize_1d import golden_section_search, make_bracket
 
 def compute_centroid(A):
     """Compute the centroid of N points in N dimensional space. x should
@@ -114,18 +115,119 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
     print('Maximum Number of Evaluations Reached')
     return vertices[0], i            
 
+from scipy.optimize import fmin
+def line_minimization(func, x_vec, step_direction, method=golden_section_search):
+    """"""
+    print(step_direction)
+    minim_func = lambda lmda: func(x_vec + lmda * step_direction)
+    inv_stepdirection = 1./step_direction[0]
+    bracket_twopoint = [1e-3 * inv_stepdirection, 1e3*inv_stepdirection] # This makes a big bracket around a step of ~1
+    three_bracket, i = make_bracket(minim_func, bracket_twopoint)
+     
+    print(three_bracket)
+    minimum, iterations = method(minim_func, three_bracket)
+    print('Num Iter Line Mini.', iterations)
+    print(fmin(minim_func, [1000]))
+    print(minimum)
+    return minimum
 
 
+def compute_gradient(func, x_vec):
+    """Computes the gradient of a multi-dimensional function by applying
+    Ridder's method on each dimension separately"""
+    dim = x_vec.shape[0]
+    nabla_f = np.zeros(dim)
+    for i in range(dim):
+        # The function below transforms the multi-dimensional function func
+        # into a function that only varies along dimension i
+        func_1d = lambda xi: func([*x_vec[:i], xi, *x_vec[i+1:]])
+        print(ridders_method(func_1d, [x_vec[i]])[0][0])
+        nabla_f[i] = ridders_method(func_1d, [x_vec[i]])[0][0] # we don't store the uncertainty now
+
+    return nabla_f
+
+def outer_product(v, w):
+    """Compute the outer product of two vectors. This is a matrix A with 
+           A_ij = v_i * w_j
+    NOTE: This function doesn't assume the vectors are of the same size, and 
+    this function is not symmetric (outer(v,w) != outer(w,v))
+    """
+    A = np.zeros((v.shape[0], w.shape[0]))
+    for i in range(v.shape[0]):
+        A[i] = v[i] * w
+    return A
+            
+    
+
+def bfgs_update(H, delta, D):
+    """Updates the approximated Hessian using the Broyden–Fletcher–Goldfarb–Shannon
+    algorithm, used for optimization with the quasi-Newton method.
+    INPUTS:
+        H: NxN ndarray, approximation of the Hessian
+        delta: N ndarray, last taken optimization step in x_vec
+        D: N ndarray, difference between new and old gradients
+    OUTPUTS:
+        H': NXN ndarray, updated approximation of the Hessian        
+    """
+    # Pre-compute some values  
+    print(delta, D)
+    deltaD = delta @ D
+    HD = H @ D
+    DHD = D @ HD
+    print('H', H)
+    print(deltaD, HD, DHD)
+    
+    u = (delta/deltaD) - (HD/DHD)
+    print(u)
+    H_update1 = outer_product(delta, delta)/deltaD
+    H_update2 = outer_product(HD, HD)/DHD
+    H_update3 = DHD * outer_product(u, u)
+    H += H_update1 - H_update2 + H_update3
+    print('H', H)
+    return H
+    
+
+def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_iter=int(1e3)):
+    """"""
+    # SETUP
+    dim = start.shape[0]
+    H = np.eye(dim)
+    x_vec = start
+    # Do this before the loop because we compute the gradient at x_i+1 in loop i
+    gradient = compute_gradient(func, x_vec)
         
+    for i in range(max_iter):
+        step_direction = -H @ gradient
+        step_size = line_minimization(func, x_vec, step_direction)
+        print(step_direction)
+        # Make the step
+        delta = step_size * step_direction
 
+        x_vec += delta
+        # Check if we have converged enough
+        #if step_size < target_step_acc:
+        #    return x_vec, i
+        
+        # Compute the gradient at the new point, and check relative convergence
+        new_gradient = compute_gradient(func, x_vec)
+        #if np.abs(np.sum((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
+        #    return x_vec, i
+    
+        # If no accuracies are reached yet, sadly we have to continue
+        D = new_gradient - gradient    
+        gradient = new_gradient
+        H = bfgs_update(H, delta, D)
+
+    return x_vec, i
 
 def test_minimization():
-    #func = lambda x: -np.exp(-x[0]*x[0] - x[1]*x[1])
-    func = lambda x: 100*(x[1]-x[0]*x[0])**2 + (1-x[0])**2
+    func = lambda x: -np.exp(-x[0]*x[0] - x[1]*x[1])
+    #func = lambda x: 100*(x[1]-x[0]*x[0])**2 + (1-x[0])**2
     xmin, xmax = -3, 3
     num_steps = 500
-    start_point = np.array([0.1,0.1])
-    minimum, iterations = downhill_simplex(func, start_point,target_acc=1e-3)
+    start_point = np.array([5,4], dtype=np.float64)
+#    minimum, iterations = downhill_simplex(func, start_point,target_acc=1e-3)
+    minimum, iterations = quasi_newton(func, start_point, max_iter=10)
     print('Num Iterations', iterations)
     print(minimum)
 
