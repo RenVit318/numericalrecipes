@@ -177,9 +177,9 @@ def galaxy_smf():
     # Fit curves
     guess = [1, 9, 1]
     popt, pcov = curve_fit(schechter, bin_centers, ydata, p0=guess, sigma=np.repeat(1, len(ydata)))
-    fit_params, fit_chi2, num_iter = levenberg_marquardt(bin_centers, ydata, 1, schechter, guess, chi_acc=0.1, linear=False)
+    #   fit_params, fit_chi2, num_iter = levenberg_marquardt(bin_centers, ydata, 1, schechter, guess, chi_acc=0.1, linear=False)
     print(popt)
-    print(fit_params)
+    #print(fit_params)
     
     # Plotting
     x = np.linspace(8, 12, 1000)
@@ -187,7 +187,7 @@ def galaxy_smf():
     plt.scatter(bin_centers, ydata, c='black', marker='x', zorder=5)
 
     plt.plot(x, schechter(x, *popt), c='red', ls='--', label='Scipy')
-    plt.plot(x, schechter(x, *fit_params), c='blue', ls='--', label=f'Own Fit, chi^2 = {fit_chi2}')
+    #plt.plot(x, schechter(x, *fit_params), c='blue', ls='--', label=f'Own Fit, chi^2 = {fit_chi2}')
     plt.legend()
     plt.show()
 
@@ -205,7 +205,7 @@ def test_opti():
     data = f(xpoints) + noise
 
     # Optimization
-    guess = [0.,0.,0.]
+    guess = [1.,1.,1.]
     fit_params, fit_chi2, num_iter = levenberg_marquardt(xpoints.flatten(), data.flatten(), sigma, func, guess, chi_acc=1e-10, linear=False)
     print('Own fit done! Num Iterations: ', num_iter)
     popt, pcov = curve_fit(func, xpoints.flatten(), data.flatten(), p0=guess, sigma=np.repeat(sigma, num_x*N))

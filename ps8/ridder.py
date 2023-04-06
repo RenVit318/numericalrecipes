@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def central_difference(func, x, h):
     """Comptue the derivative of a function evaluated at x, with step size h"""
     return (func(x+h) - func(x-h))/(2.*h)   

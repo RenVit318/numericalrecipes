@@ -18,7 +18,6 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
     direction = 1 # Indicates if we're moving right or left
     if fa < fb:
         # Switch the two points
-        print('switching points')
         a, b = b, a
         fa, fb = fb, fa
         direction = -1 # move to the left
