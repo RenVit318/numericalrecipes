@@ -9,6 +9,7 @@
 
 import numpy as np
 from .algebra import ridders_method
+from .matrix import outer_product
 from scipy.optimize import fmin  # REMOVE LATER
 
 # CODE FOR 1-DIMENSIONAL FUNCTION MINIMIZATION
@@ -207,11 +208,10 @@ def line_minimization(func, x_vec, step_direction, method=golden_section_search)
      
     # Use a 1-D minimization method to find the 'best' lmda
     minimum, _ = method(minim_func, bracket)
-    min_scipy = fmin(minim_func, [bracket[1]]) # my method doesn't work properly yet
-    print(minimum, min_scipy)
+    #min_scipy = fmin(minim_func, [bracket[1]]) # my method doesn't work properly yet
     
-    #return minimum
-    return min_scipy
+    return minimum
+    #return min_scipy
 
 
 def compute_gradient(func, x_vec):
@@ -266,15 +266,15 @@ def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_it
         step_size = line_minimization(func, x_vec, step_direction)
         # Make the step
         delta = step_size * step_direction
-
         x_vec += delta
-        # Check if we have converged enough
-        if step_size < target_step_acc:
+
+        # Check if we are going to  make a small step 
+        if np.abs(np.max(delta/x_vec)) < target_step_acc:
             return x_vec, i
         
         # Compute the gradient at the new point, and check relative convergence
         new_gradient = compute_gradient(func, x_vec)
-        if np.abs(np.sum((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
+        if np.abs(np.max((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
             return x_vec, i
         
         # If no accuracies are reached yet, sadly we have to continue
