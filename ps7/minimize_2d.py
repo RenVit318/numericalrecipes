@@ -129,9 +129,8 @@ def line_minimization(func, x_vec, step_direction, method=golden_section_search)
     # Use a 1-D minimization method to find the 'best' lmda
     minimum, _ = method(minim_func, bracket)
     min_scipy = fmin(minim_func, [bracket[1]]) # my method doesn't work properly yet
-    print(minimum, min_scipy)
     
-    #return minimum
+    return minimum
     return min_scipy
 
 
@@ -148,18 +147,6 @@ def compute_gradient(func, x_vec):
         nabla_f[i] = ridders_method(func_1d, [x_vec[i]])[0][0] # we don't store the uncertainty now
 
     return nabla_f
-
-def outer_product(v, w):
-    """Compute the outer product of two vectors. This is a matrix A with 
-           A_ij = v_i * w_j
-    NOTE: This function doesn't assume the vectors are of the same size, and 
-    this function is not symmetric (outer(v,w) != outer(w,v))
-    """
-    A = np.zeros((v.shape[0], w.shape[0]))
-    for i in range(v.shape[0]):
-        A[i] = v[i] * w
-    return A
-            
     
 
 def bfgs_update(H, delta, D):
@@ -194,25 +181,20 @@ def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_it
     # Do this before the loop because we compute the gradient at x_i+1 in loop i
     gradient = compute_gradient(func, x_vec)
         
-    for i in range(max_iter):
-        print()
-        print(x_vec)
-        print(gradient)
-        
+    for i in range(max_iter):        
         step_direction = -H @ gradient
         step_size = line_minimization(func, x_vec, step_direction)
-        print(step_direction, step_size)
         # Make the step
         delta = step_size * step_direction
-
         x_vec += delta
-        # Check if we have converged enough
-        if step_size < target_step_acc:
+
+        # Check if we are going to  make a small step 
+        if np.abs(np.max(delta/x_vec)) < target_step_acc:
             return x_vec, i
         
         # Compute the gradient at the new point, and check relative convergence
         new_gradient = compute_gradient(func, x_vec)
-        if np.abs(np.sum((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
+        if np.abs(np.max((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
             return x_vec, i
         
         # If no accuracies are reached yet, sadly we have to continue
@@ -222,13 +204,25 @@ def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_it
 
     return x_vec, i
 
+def outer_product(v, w):
+    """Compute the outer product of two vectors. This is a matrix A with 
+           A_ij = v_i * w_j
+    NOTE: This function doesn't assume the vectors are of the same size, and 
+    this function is not symmetric (outer(v,w) != outer(w,v))
+    """
+    A = np.zeros((v.shape[0], w.shape[0]))
+    for i in range(v.shape[0]):
+        A[i] = v[i] * w
+    return A
+            
+
 def test_minimization():
     func = lambda x: -np.exp(-x[0]*x[0] - x[1]*x[1])
     #func = lambda x: 100*(x[1]-x[0]*x[0])**2 + (1-x[0])**2
     xmin, xmax = -3, 3
     num_steps = 500
-    start_point = np.array([3,3], dtype=np.float64)
-#    minimum, iterations = downhill_simplex(func, start_point,target_acc=1e-3)
+    start_point = np.array([0,1], dtype=np.float64)
+    #minimum, iterations = downhill_simplex(func, start_point,target_acc=1e-3)
     minimum, iterations = quasi_newton(func, start_point, target_step_acc=1e-20, target_grad_acc=1e-20)
     print('Num Iterations', iterations)
     print(minimum)

@@ -40,16 +40,16 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
     
     for i in range(max_iter):
         if fc > fb:
-            return np.array([a, b, c])  , i
+            return np.array([a, b, c])  , i+1
 
         d = parabola_min_analytic(a, b, c, fa, fb, fc)
         fd = func(d)
         # We might have a bracket if b < d < c
         if (d>b) and (d<c):
             if fd > fb:
-                return np.array([a, b, d]), i
+                return np.array([a, b, d]), i+1
             elif fd < fc:
-                return np.array([b, d, c]), i
+                return np.array([b, d, c]), i+1
             # Else we don't want this d
             print('no parabola, in between b and c')
             d = c + direction * (c - b) * w
@@ -64,7 +64,7 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
         fa, fb, fc = fb, fc, fd
 
     print('WARNING: Max. iterations exceeded. No bracket was found. Returning last values')
-    return np.array([a, b, c]), i
+    return np.array([a, b, c]), i+1
 
 
 def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
@@ -134,7 +134,7 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
     for i in range(dim):
         vertices[i+1] = vertices[0]
         vertices[i+1][i] = shift_func(vertices[i+1][i])
-    print(vertices)
+
     func_vals = func(vertices.T) 
 
     # Start algorithm

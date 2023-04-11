@@ -9,11 +9,9 @@ import numpy as np
 import copy
 from .matrix import Matrix, lu_decomposition, solve_lineqs_lu
 from .algebra import ridders_method
+from .stats import compute_chi_sq
 
-def compute_chi_sq(x, y, sigma, func, params):
-    """Compute the chi squared value between N points x, y with
-    y uncertainty sigma and a function func with parameters params"""
-    return np.sum(((y - func(x, *params))**2)/(sigma*sigma))
+
 
 def make_param_func(params, i):
     """Given a list of parameters and an index i, return a function with
