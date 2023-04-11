@@ -4,6 +4,8 @@
 # 
 #################
 
+import numpy as np
+
 def poisson_likelihood():
     """""""
     pass

@@ -125,7 +125,7 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
     # Can do this beforehand because the derivatives never change
     # if the functions depend linearly on the parameters
     A = make_alpha_matrix(xdata, sigma, func, params, h_start, dec_factor, target_acc)
-    print(A.matrix)
+
     for iteration in range(max_iter):
         if linear:
             A_weighted = copy.deepcopy(A) # ensure no pointing goes towards A

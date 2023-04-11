@@ -56,14 +56,15 @@ def make_alpha_matrix(xdata, sigma, func, params,
     return A
 
 def make_nabla_chi2(xdata, ydata, sigma, func, params,
-                    h_start=0.1, dec_factor=2, target_acc=1e-10):
+                    h_start=0.1, dec_factor=2, target_acc=1e-10,
+                    chisq_func=compute_chi_sq):
     """"""
     M = len(params)
     chisq_derivatives = np.zeros(M)
 
     for i in range(M):
         param_func = make_param_func(params, i)
-        chi2_func_p = lambda p: compute_chi_sq(xdata, ydata, sigma, func, param_func(p))
+        chi2_func_p = lambda p: chisq_func(xdata, ydata, sigma, func, param_func(p))
         dchi_dpi, _ = ridders_method(chi2_func_p, [params[i]], h_start, dec_factor, target_acc)
         chisq_derivatives[i] = dchi_dpi
 
@@ -89,9 +90,10 @@ def beta_k(dchi_dp):
 
 def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True, 
                         w=10, lmda=1e-3, chi_acc=0.1, max_iter=int(1e5), # fit procedure params
-                        h_start=0.1, dec_factor=2, target_acc=1e-10): # derivative params
+                        chisq_func = compute_chi_sq, # mostly here for comparison with Poisson
+                        h_start=0.1, dec_factor=2, target_acc=1e-10):  # derivative params
     """"""
-    chi2 = compute_chi_sq(xdata, ydata, sigma, func, guess)
+    chi2 = chisq_func(xdata, ydata, sigma, func, guess)
 
     N = len(xdata) # Number of data points
     M = len(guess) # Number of parameters
@@ -101,8 +103,9 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
 
     # Can do this beforehand because the derivatives never change
     # if the functions depend linearly on the parameters
-    A = make_alpha_matrix(xdata, sigma, func, params, h_start, dec_factor, target_acc)
-    print(A.matrix)
+    if linear:
+        A = make_alpha_matrix(xdata, sigma, func, params, h_start, dec_factor, target_acc)
+
     for iteration in range(max_iter):
         if linear:
             A_weighted = copy.deepcopy(A) # ensure no pointing goes towards A
@@ -110,9 +113,8 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
         else:
             A = make_alpha_matrix(xdata, sigma, func, params, h_start, dec_factor, target_acc)
             A_weighted = weigh_A_diagonals(A, lmda)          
-        
-        
-        b.matrix = make_nabla_chi2(xdata, ydata, sigma, func, params, h_start, dec_factor, target_acc)
+
+        b.matrix = make_nabla_chi2(xdata, ydata, sigma, func, params, h_start, dec_factor, target_acc, chisq_func)
 
         # Solve the set of linear equations for \delta p with LU decomposition
         LU = lu_decomposition(A_weighted, implicit_pivoting=True)
@@ -120,7 +122,7 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
    
         # Evaluate new chi^2    
         new_params = params + delta_p.flatten()
-        new_chi2 = compute_chi_sq(xdata, ydata, sigma, func, new_params)
+        new_chi2 = chisq_func(xdata, ydata, sigma, func, new_params)
         delta_chi2 = new_chi2 - chi2
 
         if delta_chi2 >= 0: # reject the solution
