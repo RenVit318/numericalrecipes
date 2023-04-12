@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from ancillary import golden_section_search, make_bracket
+from ancillary import golden_section_search, make_bracket, romberg_integration
 from plotting import set_styles, hist
+from chisq_fit import fit_satellite_data_chisq, fit_procedure
 
 def readfile(filename):
     """Code to read in the halo data, copied from the hand in instructions:
@@ -31,10 +32,6 @@ def N(x, A, Nsat, a, b, c):
     return 4.*np.pi*x*x*n(x, A, Nsat, a, b, c)
 
 
-def fit_satellite_data_chisq(radius, nhalo, guess):
-    """"""
-    Nsat = len(radius)/nhalo
-    # Make own routine using levenberg marquadt iteratively?
 
 
 
@@ -74,24 +71,45 @@ def chisq_fit():
     xmax = 5
     Nbins = 20
     do_log = True
-    guess = [2, 1, 1]
-
+    guess = [3, 3, 3] 
     # do all of the below for each dataset separately
-    for i in range(4, 5):
+    for i in range(1, 6):
+#    for i in range(5,6):
         # First bin the data in log-space, discard first 5 lines because they're just comments
         radius, nhalo = readfile(f'{basename}{i}.txt')
         n, bin_edges = hist(radius, xmin, xmax, Nbins, do_log)
+
+        n /= nhalo
         bin_centers = np.zeros(len(bin_edges)-1)
         for j in range(len(bin_centers)):
             bin_centers[j] = bin_edges[j] + 0.5*(bin_edges[j+1] - bin_edges[j])
-        #plt.step(np.log10(bin_centers), np.log10(n/len(radius)), label=i)
 
         # Start with fitting a chi squared distribution to this
-        fit_satellite_data_chisq(radius, nhalo, guess)
+        Nsat = len(radius)/nhalo
+        fit_params, chi2, num_iter = fit_satellite_data_chisq(bin_centers, n, Nsat, guess, bin_edges)
+        #fit_params = [2.39, 1.72, 4.08]
+        print('Chi2 Fit Parameters', fit_params)
+        
+        #a, b, c = fit_params
+        #N_fit = lambda x, Nsat, a, b, c: N(x, 1, Nsat, a, b, c)
+        #A = Nsat/romberg_integration(N_fit, xmin, xmax, 10)   
+        fig, ax = plt.subplots(1,1)
+        ax.step(np.log10(bin_centers), np.log10(n), label='Data', where='mid')
+        ax.scatter(np.log10(bin_centers), np.log10(n), c='black', marker='X', s=100, zorder=5, label='Fit Points')
+        xlim, ylim = ax.get_xlim(), ax.get_ylim()
+        xx = np.logspace(np.log10(xmin), np.log10(xmax), 250)        
+        #yy = N(xx, A, Nsat, *fit_params)
+        yy = fit_procedure(xx, Nsat, *fit_params, xmin, xmax)
+        ax.plot(np.log10(xx), np.log10(yy), label=r'$\chi^2$ Fit')
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        
+        ax.set_title(rf'M = $10^{{{i+10}}} M_{{\odot}}$')
 
 
-
-    plt.show()
+        plt.legend()
+        plt.savefig(f'results/M1{i}_fit.png', bbox_inches='tight')
+        #plt.show()
 
 
 def poisson_fit(): 

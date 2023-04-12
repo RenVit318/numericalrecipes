@@ -17,7 +17,6 @@ def hist(x, binmin, binmax, nbins, log=False):
     """"""
     if log:
         bin_edges = np.logspace(np.log10(binmin), np.log10(binmax), nbins + 1)
-        print(bin_edges)
     else:
         bin_edges = np.linspace(binmin, binmax, nbins + 1)
 

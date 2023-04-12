@@ -56,15 +56,14 @@ def make_alpha_matrix(xdata, sigma, func, params,
     return A
 
 def make_nabla_chi2(xdata, ydata, sigma, func, params,
-                    h_start=0.1, dec_factor=2, target_acc=1e-10,
-                    chisq_func=compute_chi_sq):
+                    h_start=0.1, dec_factor=2, target_acc=1e-10):
     """"""
     M = len(params)
     chisq_derivatives = np.zeros(M)
 
     for i in range(M):
         param_func = make_param_func(params, i)
-        chi2_func_p = lambda p: chisq_func(xdata, ydata, sigma, func, param_func(p))
+        chi2_func_p = lambda p: compute_chi_sq(xdata, ydata, sigma, func, param_func(p))
         dchi_dpi, _ = ridders_method(chi2_func_p, [params[i]], h_start, dec_factor, target_acc)
         chisq_derivatives[i] = dchi_dpi
 
