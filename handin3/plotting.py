@@ -13,18 +13,24 @@ def set_styles():
     mpl.rcParams['font.size'] = 14
 
 
-def hist(x, binmin, binmax, nbins, log=False):
+def hist(x, binmin, binmax, nbins, log=False, return_centers=False):
     """"""
     if log:
         bin_edges = np.logspace(np.log10(binmin), np.log10(binmax), nbins + 1)
     else:
         bin_edges = np.linspace(binmin, binmax, nbins + 1)
+    if return_centers:
+        bin_centers = np.zeros(nbins)
 
     histogram = np.zeros(nbins)
     for i in range(nbins):
-        bin_mask = (x > bin_edges[i]) * (x < bin_edges[i + 1])
+        bin_mask = (x >= bin_edges[i]) * (x < bin_edges[i + 1])
         if log:
             histogram[i] = len(x[bin_mask]) / (np.log10(bin_edges[i + 1]) - np.log10(bin_edges[i]))
+        if return_centers:
+            bin_centers[i] = bin_edges[i] + 0.5 * (bin_edges[i+1] - bin_edges[i])
 
+    if return_centers:
+        return histogram, bin_edges, bin_centers
     return histogram, bin_edges
 

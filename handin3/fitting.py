@@ -1,6 +1,8 @@
 import numpy as np
 from ancillary import romberg_integration
 from lm_method import levenberg_marquardt
+from ancillary import merge_sort, quasi_newton
+from plotting import hist
 
 # Have to import these here again due to circular imports
 def n(x, A, Nsat, a, b, c):
@@ -15,15 +17,55 @@ def N(x, A, Nsat, a, b, c):
     return 4.*np.pi*x*x*n(x, A, Nsat, a, b, c)
 ##
 
+def poissons_likelihood_nobins(x, y, mean_func, params):
+    """Compute the likelihood of a function under a Poisson distribution,
+    and provided that each y_i is only 0 or 1"""
+    ones_mask = y==1
+    ll = -1*np.log(mean_func(params))
+    ll += mean_func(params) # expensive and maybe not necessary?
+    return ll
+
+def fit_satellite_data_poisson_nobins(x, Nsat, guess):
+    """Computes the Poisson likelihood of a function in the limit
+    where the data is essentially unbinned. This function automatically
+    computes the binsize required to obtain this.
+    mean_func should be the function that computes the mean of the
+    distribution, which should of course be linked to the fit function"""
+
+    # Find the smallest difference between two x neighbouring x. Need to sort the 
+    # array first to find this. Sorting immediately gives us max(x) and min(x) as well
+    # NOTE the below could have been done a lot quicker with numpy!
+    x_sorted = merge_sort(x)
+    diff_x = x_sorted[1:] - x_sorted[:-1]
+    smallest_diff = merge_sort(diff_x)[0] # smallest element
+    
+    # This smallest difference sets the bin size
+    nbins = int(np.ceil((x_sorted[-1] - x_sorted[0])/smallest_diff) )
+    print(nbins)
+    n, bin_edges, bin_centers = hist(x, x_sorted[0], x_sorted[-1], nbins, return_centers=True)
+    print(np.max(n))
+
+    # The only 'variable' are the parameters. Make functions to reflect this
+    fit_func = lambda x, a, b, c: fit_procedure(x, Nsat, a, b, c, bin_edges[0], bin_edges[-1])
+    mean_func = lambda p: compute_mean_satellites(bin_centers, n, None, fit_func, p, bin_edges)
+    QN_func = lambda p: poissons_likelihood_nobins(bin_centers, n, mean_func, p)
+    fit_params, n_iter = quasi_newton(QN_func, guess)
+
+    return fit_params, n_iter
+    
+    
+    
+
 def compute_mean_satellites(x, y, sigma, func, params, bin_edges):
     """Chi squared function specifically for the distribution of satellite
     galaxies around a massive central, n(x, ..) which we attempt to fit 
-    using the assumption of Poisson variance \sigma^2 = \mu"""
+    using the assumption of Poisson variance \sigma^2 = \mu. Therefore
+    sigma is not used, but we need to pass it for function interoperability"""
     # mean = variance = int(N(x))dx over the bin i
     mean_ar = np.zeros(len(bin_edges)-1)
     for i in range(len(mean_ar)):
         mean_ar[i] = romberg_integration(lambda x: func(x, *params), bin_edges[i], bin_edges[i+1], 5)
-    return np.sqrt(mean_ar)
+    return mean_ar
 
 def fit_procedure(x, Nsat, a, b, c, xmin, xmax):
     """Transforms N into a function we can fit where we iteratively compute A. 

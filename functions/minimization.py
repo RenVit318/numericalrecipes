@@ -203,15 +203,14 @@ def line_minimization(func, x_vec, step_direction, method=golden_section_search)
     minim_func = lambda lmda: func(x_vec + lmda * step_direction)
 
     inv_stepdirection = 1./step_direction[0]
-    bracket_edge_guess = [1e-3 * inv_stepdirection, 1e3*inv_stepdirection] # This makes a big bracket around a step of ~1
+    bracket_edge_guess = [0,1] # the make bracket should be able to find any minimum
     bracket, _ = make_bracket(minim_func, bracket_edge_guess)
      
     # Use a 1-D minimization method to find the 'best' lmda
     minimum, _ = method(minim_func, bracket)
-    #min_scipy = fmin(minim_func, [bracket[1]]) # my method doesn't work properly yet
-    
+   
     return minimum
-    #return min_scipy
+
 
 
 def compute_gradient(func, x_vec):

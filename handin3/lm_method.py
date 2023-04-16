@@ -222,7 +222,8 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
     """"""
        
     if chisq_like_poisson:
-        sigma = sigma_func(xdata, ydata, sigma, func, guess)
+        # sqrt becaues it computes the mean
+        sigma = np.sqrt(sigma_func(xdata, ydata, sigma, func, guess))
         print('sigma', sigma)
     chi2 = compute_chi_sq(xdata, ydata, sigma, func, guess)
     print('chi2', chi2)
@@ -257,7 +258,7 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
         #print(func(xdata, *new_params))
         #input()
         if chisq_like_poisson:
-            new_sigma = sigma_func(xdata, ydata, sigma, func, new_params)      
+            new_sigma = np.sqrt(sigma_func(xdata, ydata, sigma, func, new_params)) 
 
         new_chi2 = compute_chi_sq(xdata, ydata, new_sigma, func, new_params)
         #print('new chi2', new_chi2)
