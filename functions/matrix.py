@@ -59,7 +59,7 @@ def determine_implicit_pivot_coeff(mat):
     return row_max_inverse
 
 
-def lu_decomposition(coefficients, implicit_pivoting=True):
+def lu_decomposition(coefficients, implicit_pivoting=True, epsilon=1e-10):
     """Decomposes a matrix into:
         -L: A matrix with non-zero elements only in the lower-triangle, and ones on the diagonal
         -U: A matrix with non-zero elements only in the upper-triangle, including the diagonal
@@ -72,6 +72,9 @@ def lu_decomposition(coefficients, implicit_pivoting=True):
         A = coefficients
     if implicit_pivoting:
         row_max_inverse = determine_implicit_pivot_coeff(A)
+
+    # Fix division by zero errors to combat round-off
+    A.matrix[np.abs(A.matrix)<epsilon] = epsilon
 
     imax_ar = np.zeros(A.num_columns)
     # First pivot the matrix

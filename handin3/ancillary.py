@@ -126,7 +126,6 @@ def romberg_integration(func, a, b, order, open_formula=False):
         # Combine new function evaluations with previous
         r_array[i] = 0.5*(r_array[i-1] + delta*r_array[i])
         N_p *= 2
-
     # Combine all of our estimations to cancel our error terms
     N_p = 1
     for i in range(1,order):
@@ -182,6 +181,7 @@ def ridders_method(func, x_ar, h_start=0.1, dec_factor=2, target_acc=1e-10, appr
                 break
             else:
                 best_guess = approximations[0]
+            #print(approximations)
 
     return derivative_array, unc_array
 
@@ -309,6 +309,7 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
     Note we only compute f(d) once for each point to save computing time"""
     a, b = bracket
     fa, fb = func(a), func(b)
+    
     direction = 1 # Indicates if we're moving right or left
     if fa < fb:
         # Switch the two points
@@ -322,9 +323,11 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
     for i in range(max_iter):
         if fc > fb:
             return np.array([a, b, c])  , i+1
-
         d = parabola_min_analytic(a, b, c, fa, fb, fc)
         fd = func(d)
+        if np.isnan(fd):
+            print(f'New point d:{d} gives fd:{fd}. Breaking function')
+            return np.array([a,b,c]), i+1
         # We might have a bracket if b < d < c
         if (d>b) and (d<c):
             if fd > fb:
@@ -332,13 +335,13 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
             elif fd < fc:
                 return np.array([b, d, c]), i+1
             # Else we don't want this d
-            print('no parabola, in between b and c')
+            #print('no parabola, in between b and c')
             d = c + direction * (c - b) * w
         elif (d-b) > 100*(c-b): # d too far away, don't trust it
-            print('no parabola, too far away')
+            #print('no parabola, too far away')
             d = c + direction * (c - b) * w
         elif d < b:
-            print('d smaller than b')
+            pass#print('d smaller than b')
 
         # we shifted but didn't find a bracket. Go again
         a, b, c = b, c, d
@@ -383,20 +386,26 @@ def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
     print("Maximum Number of Iterations Reached")
     return b, i+1
 
-
-def line_minimization(func, x_vec, step_direction, method=golden_section_search):
+from scipy.optimize import minimize
+def line_minimization(func, x_vec, step_direction, method=golden_section_search, minimum_acc=0.1):
     """"""
     # Make a function f(x+lmda*n)
     minim_func = lambda lmda: func(x_vec + lmda * step_direction)
-
-    inv_stepdirection = 1./step_direction[0]
-    bracket_edge_guess = [0,1] # the make bracket should be able to find any minimum
+    print('performing LM')
+    inv_stepdirection = np.abs(1./np.sum(step_direction))
+    #bracket_edge_guess = [0,1] # the make bracket should be able to find any minimum
+    bracket_edge_guess = [0, 100*inv_stepdirection] 
+    print(bracket_edge_guess)
     bracket, _ = make_bracket(minim_func, bracket_edge_guess)
-     
+    print('bracket', bracket)
+
     # Use a 1-D minimization method to find the 'best' lmda
-    minimum, _ = method(minim_func, bracket)
-   
-    return minimum
+    minimum, _ = method(minim_func, bracket, target_acc=minimum_acc)
+    #min_scipy = minimize(minim_func, inv_stepdirection).x
+    print('minimum at', minimum)
+    #print('scipy min at' , min_scipy)
+    return minimum  
+    #return minimum
 
 
 
@@ -405,13 +414,13 @@ def compute_gradient(func, x_vec):
     Ridder's method on each dimension separately"""
     dim = x_vec.shape[0]
     nabla_f = np.zeros(dim)
+    print('computing gradient')
+
     for i in range(dim):
         # The function below transforms the multi-dimensional function func
         # into a function that only varies along dimension i
         func_1d = lambda xi: func([*x_vec[:i], xi, *x_vec[i+1:]])
-
-        nabla_f[i] = ridders_method(func_1d, [x_vec[i]])[0][0] # we don't store the uncertainty now
-
+        nabla_f[i] = ridders_method(func_1d, [x_vec[i]], target_acc=0.1)[0][0] # we don't store the uncertainty now     
     return nabla_f
     
 
@@ -445,15 +454,18 @@ def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_it
     H = np.eye(dim)
     x_vec = start
     # Do this before the loop because we compute the gradient at x_i+1 in loop i
+
     gradient = compute_gradient(func, x_vec)
-        
+    
     for i in range(max_iter):        
         step_direction = -H @ gradient
+        print('step direction', step_direction)
         step_size = line_minimization(func, x_vec, step_direction)
         # Make the step
         delta = step_size * step_direction
         x_vec += delta
-
+        print(step_direction, step_size)
+        print(x_vec)
         # Check if we are going to  make a small step 
         if np.abs(np.max(delta/x_vec)) < target_step_acc:
             return x_vec, i
@@ -469,5 +481,115 @@ def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_it
         H = bfgs_update(H, delta, D)
 
     return x_vec, i
+
+def outer_product(v, w):
+    """Compute the outer product of two vectors. This is a matrix A with 
+           A_ij = v_i * w_j
+    NOTE: This function doesn't assume the vectors are of the same size, and 
+    this function is not symmetric (outer(v,w) != outer(w,v))
+    """
+    A = np.zeros((v.shape[0], w.shape[0]))
+    for i in range(v.shape[0]):
+        A[i] = v[i] * w
+    return A
+
+
+# CODE FOR THE N-DIMENSIONAL DOWNHILL SIMPLEX
+def compute_centroid(A):
+    """Compute the centroid of N points in N dimensional space. x should
+    be an NxN array of N vectors with N dimensions (in that order). The function
+    then returns one ndarray of length N with the centroid coordinates."""
+    return (1./A.shape[1]) * np.sum(A, axis=0)
+
+
+def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), target_acc=1e-5):
+    """Finds the minimum of a function using the downhill simplex method
+    INPUT:
+        func: A function taking only one variable as input with dimension N
+        start: N-Dimensional numpy array where the function starts searching for a minimum
+        shift_func: A function taking only one float as input dictating how to mutate the
+                    initial simplex vertices
+
+    OUTPUT:
+        
+    """
+    dim = start.shape[0] # = N
+    # Store N+1 vertice vectors in this matrix. This ordering fails if we feed it directly to func,
+    # but it allows us to choose a vertex as vertices[i]. The function problem we solve by just   
+    # transposing this this matrix.
+    vertices = np.zeros((dim+1, dim)) 
+    func_vals = np.zeros(dim+1) # Store the f(X) values in here
+
+    # Create the simplex, add slight variation to each vector except the first using 'shift_func'
+    vertices[0] = start
+    func_vals[0] = func(vertices[0])
+
+    for i in range(dim):
+        vertices[i+1] = vertices[0]
+        vertices[i+1][i] = shift_func(vertices[i+1][i])
+        func_vals[i+1] = func(vertices[i+1])
+    #func_vals = func(vertices.T) 
+
+    # Start algorithm
+    for i in range(1, max_iter+1): 
+        # Sort everything by function value
+        print(f'Current best logL = {func_vals[0]} at ', vertices[0]) 
+        sort_idxs = merge_sort(key=func_vals)
+        vertices = vertices[sort_idxs]
+        func_vals = func_vals[sort_idxs]
+
+        #print(vertices)
+        #print(func_vals)
+
+        # Check if we have reached our accuracy level by comparing the best and worst function evals.
+        accuracy =(np.abs(func_vals[-1] - func_vals[0])/np.abs(0.5*(func_vals[-1] + func_vals[0]))) 
+
+        if accuracy < target_acc:
+           #print(accuracy, target_acc)
+            return vertices[0], i # corresponds to func_vals[0], so the best point
+
+        # Compute the centroid of all but the last (worst) point
+        centroid = compute_centroid(vertices[:-1])
+        
+        # Try out a new points
+        x_try = 2.* centroid - vertices[-1]
+        f_try = func(x_try)
+        
+        if f_try < func_vals[-1]:
+            # There is improvement in this step
+            if f_try < func_vals[0]:
+                # We are the best point. Try expanding
+                x_exp = 2*x_try - centroid
+                f_exp = func(x_exp)
+                if f_exp < f_try:
+                    # expanded point is even better. Replace x_N
+                    vertices[-1] = x_exp
+                    func_vals[-1] = f_exp
+                else:
+                    # x_try was good, x_exp is not better
+                    vertices[-1] = x_try
+                    func_vals[-1] = f_try
+            else:
+                # Better than x_N, not better than x_0. Just accept the point
+                vertices[-1] = x_try
+                func_vals[-1] = f_try
+    
+        else:
+            
+            # This point is worse than what we had. First try contracting, new x_try
+            x_try = 0.5*(centroid+vertices[-1])
+            f_try = func(x_try)
+            if f_try < func_vals[-1]:
+                # contracting improved x
+                vertices[-1] = x_try
+                func_vals[-1] = f_try
+            else:
+                # Nothing worked, just contract all points towards the best points
+                vertices = 0.5*(vertices[0] + vertices) # x0 doesnt shift here: 0.5(x0 + x0) = x0
+                # need to evaluate all but x0 because they shifted
+                func_vals[1:] = func(vertices[1:].T)  
+
+    print('Maximum Number of Evaluations Reached')
+    return vertices[0], i            
 
 

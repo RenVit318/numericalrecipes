@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ancillary import golden_section_search, make_bracket, romberg_integration
 from plotting import set_styles, hist
-from fitting import fit_satellite_data_chisq, fit_procedure, compute_mean_satellites, fit_satellite_data_poisson_nobins
+from fitting import fit_satellite_data_chisq, fit_procedure, compute_mean_satellites, fit_satellite_data_poisson_nobins, n, N
+from scipy.special import gammainc, gamma
 
 def readfile(filename):
     """Code to read in the halo data, copied from the hand in instructions:
@@ -16,21 +17,11 @@ def readfile(filename):
         if line[:-1] != '#':
             radius.append(float(line.split()[0]))
 
-    radius = np.array(radius, dtype=float)
+    radius = np.array(radius, dtype=np.float64)
     f.close()
     return radius, nhalo  # Return the virial radius for all the satellites in the file, and the number of halos
 
-def n(x, A, Nsat, a, b, c):
-    """Density profile of the spherical distribution of
-    satellite galaxies around a central as a function of
-    x = r/r_vir. The values given come from hand-in 2"""
-    return A*Nsat*((x/b)**(a-3))*np.exp(-(x/b)**c)
 
-def N(x, A, Nsat, a, b, c):
-    """Number of satellites at a distance x. This is the
-    function n(x, ..) integrated over the full sphere at x"""
-    return 4.*np.pi*x*x*n(x, A, Nsat, a, b, c)
-   
 
 def maximization():
     """Code for Q1a"""
@@ -98,61 +89,93 @@ def fit_data(xlim, ylim):
     xmax = 5
     Nbins = 20
     do_log = True
-    guess = np.array([2.6, 0.25, 1.25])
+    guess = np.array([2.4, 0.25, 1.5])
 
     # do all of the below for each dataset separately
-#    for i in range(1, 6):
+    #for i in range(4,5):
     for i in range(5,6):
         radius, nhalo = readfile(f'{basename}{i}.txt')
-        n, bin_edges = hist(radius, xmin, xmax, Nbins, do_log)
+        n, bin_edges, bin_centers = hist(radius, xmin, xmax, Nbins, do_log, return_centers=True)
+        #n /= nhalo
 
-        n /= nhalo
-        bin_centers = np.zeros(len(bin_edges)-1)
-        for j in range(len(bin_centers)):
-            bin_centers[j] = bin_edges[j] + 0.5*(bin_edges[j+1] - bin_edges[j])
+        Nsat = len(radius)/nhalo
+        print(f'Imported Dataset M1{i}. {len(radius)} Objects.')
 
         # 1b. Start with fitting a chi squared distribution to this using the Levenberg-Marquardt algorithm
         # the biggest adaptation to it is that sigma is iteratively computed such that \sigma^2 = \mu
-        Nsat = len(radius)/nhalo
-        #params_chi2, chi2, num_iter_chi2 = fit_satellite_data_chisq(bin_centers, n, Nsat, guess, bin_edges)
-        params_chi2 = guess
-        #print('Chi2 Fit Parameters', fit_params)
-        # Bin this chi2 model by integrating over our bins for stat. test and plotting
+        print('Starting Chi Squared Fitting..')
+        params_chi2, chi2, num_iter_chi2 = fit_satellite_data_chisq(bin_centers, n, Nsat, guess, bin_edges)
+        #params_chi2 = [3.02685823, 0.31553916, 0.80345365]
+        #chi2 = 1
+        print(f'\nChi Squared Fit:\n\Chi^2 = {chi2}\na, b, c = {params_chi2}\n')
+
+        # 1c. Now fit a Poisson distribution to this data using the Quasi-Newton method
+        print('Starting Poisson Fitting..')
+        params_poisson, logL, niter = fit_satellite_data_poisson_nobins(radius, Nsat, guess)
+        #params_poisson = [2.0804914,  0.53568838, 2.08809983]
+        #logL = 1
+        print(f'\nPoisson Fit:\nlog L = {logL}\na, b, c = {params_poisson}\n')
+
+        # Bin the Poisson and Chi squared models to match the datA
         xx = np.logspace(np.log10(xmin), np.log10(xmax), 100)
         fit_func = lambda x, a, b, c: fit_procedure(x, Nsat, a, b, c, xmin, xmax)
-        chi2_binned = compute_mean_satellites(xx, None, None, fit_func, params_chi2, bin_edges) 
-        
-        
-        # Now fit a Poisson distribution to this data using the Quasi-Newton method
-        params_chi2, niter = fit_satellite_data_poisson_nobins(radius, Nsat, guess)
-        print('niter', niter)
+        chi2_binned = nhalo * compute_mean_satellites(xx, None, None, fit_func, params_chi2, bin_edges) 
+        poisson_binned = nhalo * compute_mean_satellites(xx, None, None, fit_func, params_poisson, bin_edges) 
+              
 
+        # Statistical Tests/
+        DoF = 4 # degrees of freedom
+
+        # G-test for the chi squared model because it is binned
+        # mask out all bins without observations: lim_O->0 [O ln(O/E)] = 0 for E != 0
+        zero_mask = n != 0
+#        print(n[zero_mask], poisson_binned[zero_mask]) 
+        print(n)
+        G_chi2 = 2. * np.sum(n[zero_mask] * np.log((n/chi2_binned)[zero_mask]))
+        G_poisson = 2. * np.sum(n[zero_mask] * np.log((n/poisson_binned)[zero_mask]))
+        print(G_chi2, G_poisson)
+        Q_chi2 = (gammainc(DoF/2., G_chi2/2.)/gamma(DoF/2.))
+        Q_poisson = (gammainc(DoF/2., G_poisson/2.)/gamma(DoF/2.))
+        print(Q_chi2, Q_poisson)
+        #Q = (gammainc(DoF/2., G/2.)/gamma(DoF/2.))
+        #print(Q, 1-Q)
+        x_stat = np.linspace(0, 20, 500)
+        for j in range(1,5):
+            
+            y_stat = 1 - (gammainc(j/2.,x_stat/2.)/gamma(j/2.))
+            plt.plot(x_stat, y_stat, label=f'k = {j}')
+        plt.legend()
+        plt.show()
+           
+
+
+
+        # K-S test for the Poisson model because it is not binned
+         
         # Plotting 
         fig, ax = plt.subplots(1,1)
         ax.step(bin_centers, n, label='Data', where='mid')
         ax.scatter(bin_centers, n, c='black', marker='X', s=50, zorder=5, label='Fit Points')
 
-        
-        #xx = np.logspace(np.log10(xmin), np.log10(xmax), 250)        
-        #yy = N(xx, A, Nsat, *fit_params)
-        yy = fit_procedure(xx, Nsat, *params_chi2, xmin, xmax)
-        ax.plot(xx, yy, label=r'$\chi^2$ Fit')
-        ax.step(bin_centers, chi2_binned, where='mid')
-
-        #ax.set_title(rf'M = $10^{{{i+10}}} M_{{\odot}}$')
+        ax.step(bin_centers, chi2_binned, where='mid', label=r'$\chi^2$ Fit')
+        ax.step(bin_centers, poisson_binned, where='mid', label='Poisson Fit')
 
 
-        #plt.legend()
+        ax.set_title(rf'M = $10^{{{i+10}}} M_{{\odot}}$')      
         ax.set_xlabel(r'$r/r_{vir}$')
         ax.set_ylabel(r'$N_{sat}(r)/N_{halo}$')
         #print(xlim, ylim)
-        #ax.set_xlim(-0.19, 4)
-        #ax.set_ylim(-27, 567)
+        #ax.set_xlim(xlim)
+        #ax.set_ylim(ylim)
         ax.set_xscale('log')
         ax.set_yscale('log')
-        #plt.savefig(f'results/M1{i}_fit.png', bbox_inches='tight')
 
+        plt.legend()
+        plt.savefig(f'results/M1{i}_fit.png', bbox_inches='tight')
         plt.show()
+
+
+        
 
 
 def poisson_fit(): 

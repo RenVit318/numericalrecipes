@@ -26,7 +26,9 @@ def hist(x, binmin, binmax, nbins, log=False, return_centers=False):
     for i in range(nbins):
         bin_mask = (x >= bin_edges[i]) * (x < bin_edges[i + 1])
         if log:
-            histogram[i] = len(x[bin_mask]) / (np.log10(bin_edges[i + 1]) - np.log10(bin_edges[i]))
+            histogram[i] = len(x[bin_mask])# / (np.log10(bin_edges[i + 1]) - np.log10(bin_edges[i]))
+        else:
+            histogram[i] = len(x[bin_mask]) # / (bin_edges[i+1] - bin_edges[i])
         if return_centers:
             bin_centers[i] = bin_edges[i] + 0.5 * (bin_edges[i+1] - bin_edges[i])
 
