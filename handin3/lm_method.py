@@ -34,10 +34,6 @@ def lu_decomposition(coefficients, implicit_pivoting=True, epsilon=1e-13):
     if implicit_pivoting:
         row_max_inverse = determine_implicit_pivot_coeff(A)
 
-    
-    
-
-
     imax_ar = np.zeros(A.num_columns)
     # First pivot the matrix
     for i in range(A.num_columns):
@@ -172,7 +168,7 @@ def make_alpha_matrix(xdata, sigma, func, params,
         param_func = make_param_func(params, i)
         # Adjust Ridders method to do this in one go? Big speed upgrade.
         for j in range(N):
-            yp = lambda p: func(xdata[j], *param_func(p))
+            yp = lambda p: func([xdata[j]], *param_func(p))
             dy_dpi, _ = ridders_method(yp, [params[i]], h_start, dec_factor, target_acc)
             func_derivatives[i][j] = dy_dpi
 
@@ -185,16 +181,19 @@ def make_alpha_matrix(xdata, sigma, func, params,
 
     return A
 
-def compute_chi_sq_likepoisson(x, y, sigma, func, params):
-    """"""
-    mean = func(x, y, sigma, func, params)
-    return np.sum(((y - mean)**2) / (mean*mean))
 
 def compute_chi_sq(x, y, sigma, func, params):
     """Compute the chi squared value between N points x, y with
     y uncertainty sigma and a function func with parameters params
     Setting sigma = 1 reduces this to just lesat squares"""
     return np.sum(((y - func(x, *params))**2)/(sigma*sigma))
+
+def compute_chi_sq_likepoisson(x, y, func, params):
+    """Compute the chi squared value between N points x, y with
+    y uncertainty sigma and a function func with parameters params
+    under a Poisson distribution assumption, i.e. \sigma = \mu"""
+    mean = func(x, *params)
+    return np.sum(((y - mean)**2) / (mean))
 
 
 def make_nabla_chi2(xdata, ydata, sigma, func, params,
@@ -206,9 +205,9 @@ def make_nabla_chi2(xdata, ydata, sigma, func, params,
     for i in range(M):
         param_func = make_param_func(params, i)
         if chisq_like_poisson:
-            chi2_func_p = lambda p: compute_
+            chi2_func_p = lambda p: compute_chi_sq_likepoisson(xdata, ydata, func, param_func(p))
         else:
-            chi2_func_p = lambda p: compute_chi_sq(xdata, ydata, sigma, func, param_func(p), chisq_like_poisson=chisq_like_poisson)
+            chi2_func_p = lambda p: compute_chi_sq(xdata, ydata, sigma, func, param_func(p))
         dchi_dpi, _ = ridders_method(chi2_func_p, [params[i]], h_start, dec_factor, target_acc)
         chisq_derivatives[i] = dchi_dpi
 
@@ -236,19 +235,18 @@ def beta_k(dchi_dp):
 def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True, 
                         w=10, lmda=1e-3, chi_acc=1, max_iter=int(1e2),
                         epsilon = 1e-13, # fit procedure params
-                        chisq_like_poisson=False, sigma_func=None,
+                        chisq_like_poisson=False,
                         h_start=0.1, dec_factor=2, target_acc=1e-13):  # derivative params
     """"""
        
     if chisq_like_poisson:
         # sqrt becaues it computes the mean
-        sigma = np.sqrt(sigma_func(xdata, ydata, sigma, func, guess))
-        #print(sigma)
+        sigma = np.sqrt(func(xdata, *guess))
         if np.isnan(sigma).any():
             raise ValueError(f'NaN in sigma {sigma}')
-        chi2 = compute_chi_sq_likepoisson(xdata, ydata, sigma, sigma_func, guess)
+        chi2 = compute_chi_sq_likepoisson(xdata, ydata, func, guess)
     else:
-        chi2 = compute_chi_sq(xdata, ydata, sigma, func, guess, chisq_like_poisson=chisq_like_poisson)
+        chi2 = compute_chi_sq(xdata, ydata, sigma, func, guess)
     
     N = len(xdata) # Number of data points
     M = len(guess) # Number of parameters
@@ -269,28 +267,28 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
             # Combat round-off errors and divisions by zero
             A.matrix[np.abs(A.matrix)<epsilon] = epsilon
             A_weighted = weigh_A_diagonals(A, lmda)          
-            print(A_weighted.matrix)
 
-        b.matrix = make_nabla_chi2(xdata, ydata, sigma, func, params, h_start, dec_factor, target_acc, chisq_like_poisson=chisq_like_poisson)
-        print(b.matrix)
+
+        b.matrix = make_nabla_chi2(xdata, ydata, sigma, func, params, h_start, dec_factor, target_acc)
+
         # Solve the set of linear equations for \delta p with LU decomposition
         LU = lu_decomposition(A_weighted, implicit_pivoting=True)
         delta_p = solve_lineqs_lu(LU, b).matrix
-        print(delta_p)
+
         # Evaluate new chi^2    
         new_params = params + delta_p.flatten()
         
         if chisq_like_poisson:
-            new_sigma = np.sqrt(sigma_func(xdata, ydata, sigma, func, new_params)) 
-            new_chi2 = compute_chi_sq_likepoisson(xdata, ydata, sigma, sigma_func, params)
+            new_sigma = np.sqrt(func(xdata, *new_params)) 
+            new_chi2 = compute_chi_sq_likepoisson(xdata, ydata, func, new_params)
         else:
-
-            new_chi2 = compute_chi_sq(xdata, ydata, new_sigma, func, new_params, chisq_like_poisson=chisq_like_poisson)
+            new_chi2 = compute_chi_sq(xdata, ydata, sigma, func, new_params)
+        
         delta_chi2 = new_chi2 - chi2
 
         if delta_chi2 >= 0 or not np.isfinite(new_chi2): # reject the solution
             lmda = w*lmda
-            print(f'delta = {delta_chi2}. Reject. lambda = {lmda:.2E} chi2 = {chi2}')
+            #print(f'delta = {delta_chi2}. Reject. lambda = {lmda:.2E} chi2 = {chi2}')
             continue
 
         if np.abs(delta_chi2) < chi_acc:
@@ -302,8 +300,7 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
         lmda = lmda/w  
         if chisq_like_poisson:
             sigma = new_sigma
-        print(f'delta = {delta_chi2}. Accept. lambda = {lmda:.2E} chi2 = {chi2}')
-        
+        #print(f'delta = {delta_chi2}. Accept. lambda = {lmda:.2E} chi2 = {chi2}')
        
     print("Max Iterations Reached")
     return params, new_chi2, iteration+1

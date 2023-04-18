@@ -181,7 +181,6 @@ def ridders_method(func, x_ar, h_start=0.1, dec_factor=2, target_acc=1e-10, appr
                 break
             else:
                 best_guess = approximations[0]
-            #print(approximations)
 
     return derivative_array, unc_array
 
@@ -386,26 +385,19 @@ def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
     print("Maximum Number of Iterations Reached")
     return b, i+1
 
-from scipy.optimize import minimize
+
 def line_minimization(func, x_vec, step_direction, method=golden_section_search, minimum_acc=0.1):
     """"""
     # Make a function f(x+lmda*n)
     minim_func = lambda lmda: func(x_vec + lmda * step_direction)
-    print('performing LM')
     inv_stepdirection = np.abs(1./np.sum(step_direction))
-    #bracket_edge_guess = [0,1] # the make bracket should be able to find any minimum
-    bracket_edge_guess = [0, 100*inv_stepdirection] 
-    print(bracket_edge_guess)
-    bracket, _ = make_bracket(minim_func, bracket_edge_guess)
-    print('bracket', bracket)
+
+    bracket_edge_guess = [0, 100*inv_stepdirection]  # keeps the steps realatively small to combat divergence
+    bracket, _ = make_bracket(minim_func, bracket_edge_guess) # make a 3-point bracket surrounding a minimum
 
     # Use a 1-D minimization method to find the 'best' lmda
     minimum, _ = method(minim_func, bracket, target_acc=minimum_acc)
-    #min_scipy = minimize(minim_func, inv_stepdirection).x
-    print('minimum at', minimum)
-    #print('scipy min at' , min_scipy)
-    return minimum  
-    #return minimum
+    return minimum
 
 
 
@@ -414,7 +406,6 @@ def compute_gradient(func, x_vec):
     Ridder's method on each dimension separately"""
     dim = x_vec.shape[0]
     nabla_f = np.zeros(dim)
-    print('computing gradient')
 
     for i in range(dim):
         # The function below transforms the multi-dimensional function func
@@ -459,13 +450,11 @@ def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_it
     
     for i in range(max_iter):        
         step_direction = -H @ gradient
-        print('step direction', step_direction)
         step_size = line_minimization(func, x_vec, step_direction)
         # Make the step
         delta = step_size * step_direction
         x_vec += delta
-        print(step_direction, step_size)
-        print(x_vec)
+
         # Check if we are going to  make a small step 
         if np.abs(np.max(delta/x_vec)) < target_step_acc:
             return x_vec, i
@@ -508,10 +497,7 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
         func: A function taking only one variable as input with dimension N
         start: N-Dimensional numpy array where the function starts searching for a minimum
         shift_func: A function taking only one float as input dictating how to mutate the
-                    initial simplex vertices
-
-    OUTPUT:
-        
+                    initial simplex vertices        
     """
     dim = start.shape[0] # = N
     # Store N+1 vertice vectors in this matrix. This ordering fails if we feed it directly to func,
@@ -528,24 +514,19 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
         vertices[i+1] = vertices[0]
         vertices[i+1][i] = shift_func(vertices[i+1][i])
         func_vals[i+1] = func(vertices[i+1])
-    #func_vals = func(vertices.T) 
 
     # Start algorithm
     for i in range(1, max_iter+1): 
         # Sort everything by function value
-        print(f'Current best logL = {func_vals[0]} at ', vertices[0]) 
         sort_idxs = merge_sort(key=func_vals)
         vertices = vertices[sort_idxs]
         func_vals = func_vals[sort_idxs]
-
-        #print(vertices)
-        #print(func_vals)
+        #print(f'Current best logL = {func_vals[0]} at ', vertices[0]) 
 
         # Check if we have reached our accuracy level by comparing the best and worst function evals.
         accuracy =(np.abs(func_vals[-1] - func_vals[0])/np.abs(0.5*(func_vals[-1] + func_vals[0]))) 
-
+        print(accuracy)
         if accuracy < target_acc:
-           #print(accuracy, target_acc)
             return vertices[0], i # corresponds to func_vals[0], so the best point
 
         # Compute the centroid of all but the last (worst) point
@@ -575,7 +556,6 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
                 func_vals[-1] = f_try
     
         else:
-            
             # This point is worse than what we had. First try contracting, new x_try
             x_try = 0.5*(centroid+vertices[-1])
             f_try = func(x_try)
