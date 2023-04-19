@@ -361,6 +361,8 @@ def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
         # Set new point in the largest interval
         # We do this separately because the bracket propagation can just not be generalized sadly
         if np.abs(c-b) > np.abs(b-a): # we tighten towards the right
+            print(a,b,c)
+            print(fa,fb,fc)
             d = b + (c-b)*w
             fd = func(d)
             if fd < fb: # min is in between b and c
@@ -390,9 +392,10 @@ def line_minimization(func, x_vec, step_direction, method=golden_section_search,
     """"""
     # Make a function f(x+lmda*n)
     minim_func = lambda lmda: func(x_vec + lmda * step_direction)
-    inv_stepdirection = np.abs(1./np.sum(step_direction))
 
-    bracket_edge_guess = [0, 100*inv_stepdirection]  # keeps the steps realatively small to combat divergence
+    # The parameter landscape is very prone to diverging, and the gradients are very steep. Attempt to keep steps small!
+    inv_stepdirection = np.abs(1./np.sum(step_direction)) # roughly equal to 1
+    bracket_edge_guess = [0, 1]#inv_stepdirection]  # keeps the steps realatively small to combat divergence
     bracket, _ = make_bracket(minim_func, bracket_edge_guess) # make a 3-point bracket surrounding a minimum
 
     # Use a 1-D minimization method to find the 'best' lmda
@@ -411,7 +414,7 @@ def compute_gradient(func, x_vec):
         # The function below transforms the multi-dimensional function func
         # into a function that only varies along dimension i
         func_1d = lambda xi: func([*x_vec[:i], xi, *x_vec[i+1:]])
-        nabla_f[i] = ridders_method(func_1d, [x_vec[i]], target_acc=0.1)[0][0] # we don't store the uncertainty now     
+        nabla_f[i] = ridders_method(func_1d, [x_vec[i]], target_acc=1e-5)[0][0] # we don't store the uncertainty now     
     return nabla_f
     
 
@@ -454,11 +457,11 @@ def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_it
         # Make the step
         delta = step_size * step_direction
         x_vec += delta
-
+        print(step_direction, step_size)
         # Check if we are going to  make a small step 
         if np.abs(np.max(delta/x_vec)) < target_step_acc:
             return x_vec, i
-        
+        print(gradient)
         # Compute the gradient at the new point, and check relative convergence
         new_gradient = compute_gradient(func, x_vec)
         if np.abs(np.max((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
@@ -491,7 +494,7 @@ def compute_centroid(A):
     return (1./A.shape[1]) * np.sum(A, axis=0)
 
 
-def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), target_acc=1e-5):
+def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), target_acc=1e-10):
     """Finds the minimum of a function using the downhill simplex method
     INPUT:
         func: A function taking only one variable as input with dimension N
@@ -525,7 +528,6 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
 
         # Check if we have reached our accuracy level by comparing the best and worst function evals.
         accuracy =(np.abs(func_vals[-1] - func_vals[0])/np.abs(0.5*(func_vals[-1] + func_vals[0]))) 
-        print(accuracy)
         if accuracy < target_acc:
             return vertices[0], i # corresponds to func_vals[0], so the best point
 
@@ -567,7 +569,8 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
                 # Nothing worked, just contract all points towards the best points
                 vertices = 0.5*(vertices[0] + vertices) # x0 doesnt shift here: 0.5(x0 + x0) = x0
                 # need to evaluate all but x0 because they shifted
-                func_vals[1:] = func(vertices[1:].T)  
+                for i in range(dim):
+                    func_vals[i+1] = func(vertices[i+1])
 
     print('Maximum Number of Evaluations Reached')
     return vertices[0], i            

@@ -43,13 +43,26 @@ def maximization():
     x_at_max, _ = golden_section_search(minim_func, bracket)
     max_val = N(x_at_max, A, Nsat, a, b, c)
 
-    print(f'Maximum of N(x) found at x = {x_at_max:.2f}, N(x) = {max_val:.2f}')
+    print(f'Maximum of N(x) found at x = {x_at_max}, N(x) = {max_val}')
 
     xx = np.linspace(xmin, xmax, 1000)
     yy = N(xx, A, Nsat, a, b ,c)
     plt.plot(xx, yy)
-    plt.scatter(x_at_max, max_val, c='red', marker='X', s=100,zorder=3)
-    plt.show()
+    plt.scatter(x_at_max, max_val, c='red', marker='+', alpha=0.75, s=100,zorder=3, label=f'Maximum\nx={x_at_max:.2f}\nN(x)={max_val:.2f}')
+    plt.axhline(y=0, c='black', ls='--')
+    plt.xlim(xmin,xmax)
+    plt.xlabel(r'$x$')
+    plt.ylabel(r'$N_{sat}(x)$')
+    plt.title('Satellite Galaxy Number Distribution')
+    plt.legend()
+    plt.savefig('results/maxi.png', bbox_inches='tight')
+
+    with open ('results/maxi_results.txt', 'w') as file:
+        file.write(f"""Minimization Results
+Bracket: {bracket}
+x at Max: {x_at_max}
+N(x) Max: {max_val}""")
+    
     
 def make_plot_alldata():
     """Make a plot showcasing all raw, binned data for the report"""
@@ -64,34 +77,39 @@ def make_plot_alldata():
         radius, nhalo = readfile(f'{basename}{i}.txt')
         n, bin_edges = hist(radius, xmin, xmax, Nbins, do_log)
 
-        n /= nhalo
+        Nsat = len(radius)/nhalo
         bin_centers = np.zeros(len(bin_edges)-1)
         for j in range(len(bin_centers)):
             bin_centers[j] = bin_edges[j] + 0.5*(bin_edges[j+1] - bin_edges[j])
 
-        ax.step(bin_centers, n, label='Data', where='mid')
+        ax.step(bin_centers, n, where='mid', label=rf'$M=10^{{{i+10}}}M_{{\odot}}$'+'\n'+rf'$N_{{halo}} = {nhalo}$')#+'\n'+rf'$\left<N_{{sat}}\right>= {Nsat:.3E}$')
 
     xlim, ylim = ax.get_xlim(), ax.get_ylim() # For future plotting of individual sets
     ax.set_xlabel(r'$r/r_{vir}$')
-    ax.set_ylabel(r'$N_{sat}(r)/N_{halo}$')
+    ax.set_ylabel(r'$N_{sat}(r)$')
+    ax.set_title('Satellite Galaxy Data')
 
     ax.set_xscale('log')
     ax.set_yscale('log')
+    plt.legend(title='Parameters', bbox_to_anchor=(1, 1), frameon=True, fancybox=True)
     plt.savefig('results/satellite_data.png', bbox_inches='tight')
     
     return xlim, ylim
 
 
-def fit_data(xlim, ylim):
+def fit_data():#xlim, ylim):
     """Code for Q1b-d"""
     basename = 'data/satgals_m1'
     xmin = 1e-4 # cannot take zero because it messes with log and powers
     xmax = 5
     Nbins = 20
     do_log = True
-    no_bins = True
+    no_bins = False
     guess = np.array([2.4, 0.25, 1.5])
-
+    fitres_txt_chi2 = ""
+    fitres_txt_poisson = ""
+    stats_txt = ""
+    
     # do all of the below for each dataset separately
     for i in range(1,6):
     #for i in range(5,6):
@@ -104,15 +122,15 @@ def fit_data(xlim, ylim):
         # 1b. Start with fitting a chi squared distribution to this using the Levenberg-Marquardt algorithm
         # the biggest adaptation to it is that sigma is iteratively computed such that \sigma^2 = \mu
         print('Starting Chi Squared Fitting..')
-        params_chi2, chi2, num_iter_chi2 = fit_satellite_data_chisq(bin_centers, n, Nsat, guess, bin_edges)
+        params_chi2, chi2, niter_chi2 = fit_satellite_data_chisq(bin_centers, n, Nsat, guess, bin_edges)
         print(f'\nChi Squared Fit:\n\Chi^2 = {chi2}\na, b, c = {params_chi2}\n')
 
         # 1c. Now fit a Poisson distribution to this data using the Quasi-Newton method
         print('Starting Poisson Fitting..')
         if no_bins:
-            params_poisson, logL, niter = fit_satellite_data_poisson(radius, None, Nsat, guess, bin_edges, no_bins)
+            params_poisson, logL, niter_poisson = fit_satellite_data_poisson(radius, None, Nsat, params_chi2, bin_edges, no_bins)
         else: # feed it only nbins data points if wanted
-            params_poisson, logL, niter = fit_satellite_data_poisson(bin_centers, n, Nsat, guess, bin_edges, no_bins)
+            params_poisson, logL, niter_poisson = fit_satellite_data_poisson(bin_centers, n, Nsat, guess, bin_edges, no_bins)
         print(f'\nPoisson Fit:\nlog L = {logL}\na, b, c = {params_poisson}\n')
 
         # Bin the Poisson and Chi squared models to match the datA
@@ -122,8 +140,8 @@ def fit_data(xlim, ylim):
         poisson_binned = nhalo * compute_mean_satellites(xx, *params_poisson, bin_edges, Nsat) 
 
         # Statistical Tests
-        DoF = 4 # degrees of freedom
-
+        DoF = len(radius) - 3 # degrees of freedom
+    
         # G-test for the chi squared model because it is binned
         # mask out all bins without observations: lim_O->0 [O ln(O/E)] = 0 for E != 0
         zero_mask = n != 0
@@ -134,9 +152,6 @@ def fit_data(xlim, ylim):
         Q_poisson = (gammainc(DoF/2., G_poisson/2.)/gamma(DoF/2.))
         print(f'G_chi2 = {G_chi2}, G_poisson = {G_poisson}')
         print(f'Q_chi2 = {Q_chi2}, Q_poisson = {Q_poisson}')
-
-        # K-S test for the Poisson model because it is not binned
-        
          
         # Plotting 
         fig, ax = plt.subplots(1,1)
@@ -152,19 +167,30 @@ def fit_data(xlim, ylim):
         ax.set_ylabel(r'$N_{sat}(r)/N_{halo}$')
         ax.set_xscale('log')
         ax.set_yscale('log')
-
         plt.legend()
+
         plt.savefig(f'results/M1{i}_fit.png', bbox_inches='tight')
+        fitres_txt_chi2 += f'M1{i}\t{Nsat}\t{params_chi2[0]}\t{params_chi2[1]}\t{params_chi2[2]}\t{chi2}\t{niter_chi2}\t{G_chi2}\t{Q_chi2}\n'
+        fitres_txt_poisson += f'    M1{i}\t{Nsat}\t{params_poisson[0]}\t{params_poisson[1]}\t{params_poisson[2]}\t{logL}\t{niter_poisson}\t{G_poisson}\t{Q_chi2}\n'
 
+    with open('results/fitresults.txt', 'w') as file:
+        file.write('Chi-Squared Fit Results\n')
+        file.write('Mass\tNsat\ta\tb\tc\tChi^2\tNiter\tG\tQ\n')
+        file.write(fitres_txt_chi2)
+        
+        file.write('\nPoisson Fit Results\n')        
+        file.write('Mass\tNsat\ta\tb\tc\tlog L\tNiter\tG\tQ\n')
+        file.write(fitres_txt_poisson)
 
-
-
+import time
 def full_run():
+    t0 = time.time()
     set_styles()
-    #maximization()
-    #make_plot_alldata()
-    fit_data(xlim, ylim)
-    #poisson_fit()
+    maximization()
+    make_plot_alldata()
+    fit_data()
+    print(f'total runtime {time.time()-t0}s')
+    
 
 def main():
     full_run()

@@ -85,7 +85,7 @@ def poisson_fit_func(x, y, delta_x, bin_edges, Nsat, params, xmin, xmax, no_bins
         else:
             int_min, int_max = bin_edges[i], bin_edges[i+1]  
             
-        mean_ar[i] = romberg_integration(N_fit, int_min, int_max, 5)
+        mean_ar[i] = romberg_integration(N_fit, int_min, int_max, 7)
 
     if no_bins:
         ll = -1.*np.sum(np.log(mean_ar)) # plus an integral we take as constant

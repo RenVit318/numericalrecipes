@@ -1,104 +1,76 @@
 \section{Satellite Galaxies Around a Massive Central}
 
-In this section we will investigate the spherical distribution of satellite galaxies around a massive central galaxies, and attempt to fit a function to simulated data. Their density distribution $n$ can be described
+In this section we will investigate the spherical distribution of satellite galaxies around a massive central galaxies, and attempt to  fit a function to simulated data. Their density distribution $n$ can be described as
 
 \begin{equation}
     n(x) = A\left<N_{sat}\right>\left(\frac{x}{b}\right)^{a-3}\exp{\left[-\left(\frac{x}{b}\right)^{c}\right]}\label{eq:nx}
 \end{equation}
 
-
-
- %%%%%%%%%%%%%%%%%%%%%%%%%%
-Where we take $a = 2.4$, $b = 0.25$, $c = 1.6$ and $\left<N_{sat}\right> = 100$. $x$ is the radius relative to the virial radius, i.e. $x \equiv r/r_{vir}$. $A$ is a normalization constant that we do not a priori know, but is set such that the three dimensional spherical from $x = 0$ to $x_{max} = 5$ is equal to the average number of satellites, $\left<N_{sat}\right>$:
+Here $x$ is the radius relative to the virial radius, i.e. $x \equiv r/r_{vir}$ with $x < x_{max} = 5$. $a$, $b$ and $c$ are free parameters, $\left<N_{sat}\right>$ is the mean number of satellites per halo and $A = A(a,b,c)$ normalizes this profile such that $\int\int\int_V n(x)dV = \left<N_{sat}\right>$. In this work we will mainly look at tt the number of satellites in the infinitesimal range $\left[x, x+dx\right>$. This is given by
 
 \begin{equation}
-    \int\int\int_V n(x)dV = \left<N_{sat}\right>.\label{eq:vol_int}
+    N(x)dx = n(x)4\pi x^2dx\label{eq:Nx}
 \end{equation}
 
-\lstinputlisting[caption={Setup code for the first assignment}, linerange={7 -11, 18-34}]{satellite_galaxies.py}
 
-\subsection{Normalization Constant}
+\subsection{Maximization}\label{sec:maxi}
 
-Looking at equation \ref{eq:nx} we can see that it is independent of angle, and only depends on the radial distance. This allows us to transform the integral in equation \ref{eq:vol_int} to a spherical integral over $\theta, \phi, x$ as
+We start by searching for the maximum of the distribution given by equation \ref{eq:Nx}, for this we will assume $a=2.4$, $b=0.25$, $c=1.6$. $x_{max}=5$, $\left<N_{sat}\right>=100$ and $A=256/(5\pi^{3/2})$. Instead of searching for the maximum, we instead search for the minimum of $-N(x)dx$ which gives the equivalent resulting $x$. Visually inspecting the distribution (Figure \ref{fig:maximum}), we see a clear peak at $x \sim 0.5$. To be safe we set the edges of our initial bracket at $x_{min} = 0$ and $x_{max} = 5$ and then apply a bracketing algorithm to find a three-point bracket around the minimum. Then we use this bracket as input to the golden section search algorithm to find the $x$-value at the peak. We find the following brackets and minimization results:  
 
-\begin{align*}
-    \int\int\int_V n(x)dV &= \int_0^{x_{max}} \int_0^{\pi} \int_0^{2\pi} n(x)x^2\sin(\theta) d\phi d\theta dx \\
-& = 4\pi~\int_0^{x_{max}} n(x)x^2 dx \\
-&= 4\pi~\int_0^{x_{max}} x^2 A\left<N_{sat}\right>\left(\frac{x}{b}\right)^{a-3}\exp{\left[-\left(\frac{x}{b}\right)^{c}\right]} dx
-\end{align*}
+\lstinputlisting[caption={Results of the maximization algorithm.}, label={lst:maxi_results}]{results/maxi_results.txt}
 
-Here we begin by setting $A = 1$, and using the result of this integral to calibrate $A$ such that equation \ref{eq:vol_int} holds. We can evaluate this integral using a simple one dimensional numerical integrator. We apply a Romberg integrator with order 10 to ensure sufficient accuracy. We have to account for the fact that $n(x)$ is not defined at $x = 0$ because $\left(\frac{x}{b}\right)^{a-3}$ causes a division by zero if $a < 3$, which is the case here. To combat this we set $h_{start} = \frac{b-a}{2}$ instead of $h_{start} = b-a$ to avoid evaluating $n(x=0)$.
-
-We find $\int_V n(x)dV = 10.88$, which means we have to set the normalization constant $A = \frac{\left<N_{sat}\right>}{10.88} = \frac{100}{10.88} = 9.19$. We will use this value for $A$ throughout the rest of this work.
-
-\lstinputlisting[caption={Code applying the integration algorithm to the algorithm in this assignment}, linerange={36-42}]{satellite_galaxies.py}
-
-\subsection{Distribution Sampling}
-
-We want to sample the 3D distribution of satellites such that they statistically follow the distribution in equation \ref{eq:nx}. This means that the the probability distribution should be $p(x)dx = N(x)dx/\left<N_{sat}\right>$. Here $N(x)dx$ is the number of satellites in a spherical shell of size $dx$ at relative radius $x$ from the center of the massive galaxy. This is equal to the result we saw for the spherical integral in the previous section, thus the probability distribution we want to sample is
-
-\begin{equation}
-    p(x)dx = x^2 A\left(\frac{x}{b}\right)^{a-3}\exp{\left[-\left(\frac{x}{b}\right)^{c}\right]} dx\label{eq:pxdx}
-\end{equation}
+We also show the distribution and the exact location of this peak in Figure \ref{fig:maximum}. We can see that the algorithms have perfectly discovered the maximium of this distribution.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{results/pxdx.png}
-    \caption{Analytical distribution of the number of satellite galaxies in a shell around a massive galaxy with thickness $dr$ at radius $r$, described by equation \ref{eq:pxdx}.}
-    \label{fig:pxdx_distribution}
+    \includegraphics[width=0.8\textwidth]{results/maxi.png}
+    \caption{Distribution of the number of galaxies in the infinitesimal range $\left[x, x+dx\right>$ described by equation \ref{eq:Nx}. The red cross indicates the position of the maximum of this distribution discovered using the golden search algorihtm as described in Section \ref{sec:maxi}}
+    \label{fig:maximum}
 \end{figure}
 
-In this work we will use rejection sampling to simulate this distribution. The implementation in this work first generates two random numbers generated using \texttt{32-bit multiply with carry} with $x0=1898567$, $a=4294957665$ as recommended in the lacture. We call the first number $x$ and shift it to a uniform distribution in log-space in the range $\left[-4, ^{10}\log(5)\right]$ (corresponding to the range $\left[10^{-4}, 5\right]$ in linear space), and the second we call $y$ and shift it to the range $\left[0, 2.68\right]$ where $2.68$ is the maximum of the distribution given in equation \ref{eq:pxdx} as shown in figure \ref{fig:pxdx_distribution}. If the $\left(x_i, y_i\right)$ point falls below the curve described by equation \ref{eq:pxdx} we accept it, otherwise we reject it\footnote{In the code, we have replaced each $x$ in equation \ref{eq:pxdx} with $10^x$ to account for the fact we sample in log-space.}. After each step we use the last generated random number as \texttt{x0} for the next number. We repeat this entire process, until we have $N = 10^4$ samples in total. We note that rejection sampling is far from the most efficient method to sample a distribution such as this because the majority of possible points in our $\left(x, y\right)$ range will be rejected as is evident in figure \ref{fig:pxdx_distribution}. To slightly combat this we have sampled $x$ in log- instead of linear space which means small values ($<1$) are sampled at a higher rate, and the algorithm finds itself in the "interesting" region of the distribution more often. Nevertheless, on average the rejection sampling algorithm still takes $\sim~6$ attempts (12 random numbers generated) untill it finds an accepted point.
 
-We plot the results from our sampling algorithm as a histogram with 20 equally spaced bins in log-space in figure \ref{fig:gal_pdf}. We divided the height of each bin by $10^4$ to account for the fact that $p(x)dx$ normalizes to 1, and divide each bin by its width in log-space. We can see in the figure that the analytical distribution, and our sampled distribution match almost perfectly everywhere except the edges. These edges are missing from this plot because the sampler is often unable to sample points in these regions due to the large value for $p(x)dx$ there.
+\subsection{Data Fitting}
+
+We import the five datafiles provided for this hand-in which contain satellite galaxies for halos in increasing mass bins ranging from $10^{11} M_{\odot}$ up to $10^{15} M_{\odot}$. Each file contains a number of halos, $N_{halo}$, and the distances of each satellite galaxy from its center massive galaxy. For each dataset we can immediately compute $\left<N_{sat}\right>$ by dividing the total number of satellite galaxies by $N_{halo}$. We bin the data in 20 bins from $x = 10^{-4}$ to $x=5$ in log-space. We set the lower limit above $x=0$ for computational reasons because equation \ref{eq:Nx} is not defined there. We opt to show the distributions in log-space to better visualize the low $x$ region. The decision for 20 bins is relatively arbitrary but appears to result in plots that are easily interpretable. We show the binned data together with $N_{halo}$ for each dataset in Figure \ref{fig:sat_data}.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.8\textwidth]{results/satellite_galaxies_pdf.png}
-    \caption{Analytical distribution of satellite galaxies around a massive central overplotted on the same distribution sampled by our rejection algorithm with $N=10^4$ described in the text. The histgoram bin heights are scaled down by a factor $10^3$ to enforce the same normalization.}
-    \label{fig:gal_pdf}
+    \includegraphics[width=\textwidth]{results/satellite_data.png}
+    \caption{Binned satellite galaxy distance data divided into five mass bins of their massive galaxy halo as indicated on the right. The total number of halos over which the satellite galaxies are distributed is also indicated on the right.}
+    \label{fig:sat_data}
 \end{figure}
 
-\lstinputlisting[caption={Code to sample the distribution given in this assignment}, linerange={44-89}]{satellite_galaxies.py}
+In the next two subsections we will first describe our two approaches to fit equation \ref{eq:Nx} to these distributions. Because that equation is normalized such that the area under the curve equals $\left<N_{sat}\right>$, we divide the histograms shown in Figure \ref{fig:sat_data} by $N_{halo}$ to recreate this. In Section \ref{sec:fitresults} we present the results of our fitting algorithms applied to the data, combined with a brief statistical analysis.
 
-\subsection{Random Selection}
+\subsubsection{Chi-Squared}
 
-We want to look at the cumulative distribution function (CDF) of the sampled probability distribution shown in figure \ref{fig:gal_pdf}. To do this we first select 100 random satellite galaxies following the criteria given on the handout: each galaxy is selected with equal probabilty, no galaxy is selected twice, and we do not reject any draws. The simple (but maybe relatively overboard) method we use to ensure these criteria are upheld is to first shuffle the array of $10^4$ galaxies in a random order, and then select the first 100.
-
-We perform the random shuffling by generating $10^4$ random numers using our random number generator mentioned earlier, and use these numbers as keys in our \texttt{merge\_sort} algorithm on which to "sort" an array of indices. We then apply these "sorted" indices on the sampled array to shuffle it, and select the first 100 instances. Finally, we sort these 100 galaxies using the same algorithm on their radii directly. We then use this sorted array to plot a CDF, normalized to $1$, and present this in figure \ref{fig:gal_cdf}.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\textwidth]{results/satellite_galaxies_cdf.png}
-    \caption{Cumulative distribution function normalized to 1 of $p(x)dx$ sampled using rejection sampling with $N=10^4$, created using only a random subset of 100 satellites.}
-    \label{fig:gal_cdf}
-\end{figure}
-
-In correspondence with the PDF we saw in figure \ref{fig:gal_pdf}, we can see there are almost no satellites present at either edges of the interval. The most satellite galaxies are found at $\sim x = 0.1$, a result we also saw earlier.
-
-\lstinputlisting[caption={Code used to compute the histogram bins}, firstline={14}]{plotting.py}
-\lstinputlisting[caption={Code to generate the CDF presented in this work}, linerange={91-115}]{satellite_galaxies.py}
-
-\subsection{Derivative}
-
-To conclude this section we will look at the derivative of $n(x)$ (equation \ref{eq:nx}, not $N(x)$!) at $x=1$. To compute this derivative we have used Ridder's Method with $h_{start} = 0.1$. Similarly to the Romberg integration earlier, we cannot choose $h_{start} = 1$ because then we would have to sample $n(x=0)$, where the function is not defined. In agreement with the assignment, we set our target accuracy at $10^{-12}$. This means we stop if our uncertainty, defined as the absolute difference between the current and previous best estimates, drops below this threshold. We compare our findings to the analytical derivative of $n(x)$ which we find to be
+These data are discrete counts, so therefore they should be fit by a Poisson distribution. However we start with an 'easy' $\chi^2$ fit with Poisson variance (i.e. $\sigma^2 = \mu$) to compare to the proper unbiased fit. This means that we want to minimize the function
 
 \begin{equation}
-    \frac{dn}{dx}_{(analytical)} = -A\left<N_{sat}\right>\exp\left[-\left(\frac{x}{b}\right)^c\right]~\frac{b^3\left(\frac{x}{b}\right)^a\left(c\left(\frac{x}{b}\right)^c - a + 3 \right) }{x^4}
+    \chi^2 = \frac{\left(y_i - \mu(x_i | \boldsymbol{p})\right)}{\mu(x_i | \boldsymbol{p})}.\label{eq:chi2}
 \end{equation}
 
-Now comparing the two results, using Ridder's Method we find
+Where $x_i$ and $y_i$ are the bin center and bin counts respectively. $\mu$ is a function of the parameter describing the expected value in any particular bin, which is given by
 
-\begin{equation*}
-    \frac{dn}{dx}_{(ridder)} = -0.625328061833 \pm 2.220 \times 10^{-14}
-\end{equation*}
+\begin{equation}
+    \mu\left(x_i | \boldsymbol{p})\right) = \tilde N_i = \int_{x_i}^{x_{i+1}} N(x)dx.\label{eq:mean}
+\end{equation}
 
-While analytically we find
+We minimize Equation \ref{eq:chi2} for each dataset separately using the Levenberg-Marquardt algorithm. As a good starting guess we use the same parameters as in Section \ref{sec:maxi}, i.e. $a=2.4$, $b=0.25$, $c=1.6$. Another important thing to note is that the normalization constant $A$ is a function of these three parameters which keep changing. We therefore compute a new value for $A$ each time the parameters are shift by first integrating over $N(x)$ from $x_{min}=10^{-4}$ to $x_{max}=5$ using Romberg integration and $A=1$. We then compute $A$ by dividing $\left<N_{sat}\right>$ by the result of this integral.
 
-\begin{equation*}
-    \frac{dn}{dx}_{(analytical)} = -0.625328061833
-\end{equation*}
 
-These two values match exactly up to 12 digits, indicating the strength of the numerical differentiator implemented here.
+\subsubsection{Poisson}
 
-\lstinputlisting[caption={Analytical derivative function, and code to use Ridder's Method}, linerange={117-126}]{satellite_galaxies.py}
+For the Poisson fit we have two options: we can either use the same binned data as is used for the $\chi^2$ fit, or we can opt to not use bins at all. In this latter case we pretend as though we did bin the data, however with bin size sufficiently small such that each bin contains either 0 or 1 objects. Doing this allows us to make better use of the data at the cost of more computational load. In the worst case, namely the first dataset, this difference is a factor on the order of $10^4$. Unfortunately while implemented, we have been unable to use this binless fitting as computing time exceeds the maximum alloted time of ten minutes. Therefore we opt to fit the data here using the same bins as in the previous section. The log-likelihood of a Poisson distribution is given as
+
+\begin{equation}
+    -\ln \mathcal{L}(\boldsymbol{p}) = -\sum_{i=0}^{N-1} \left(y_i\ln\left[\mu(x_i | \boldsymbol{p}))\right] - \mu(x_i | \boldsymbol{p})) - \ln(y_i!)\right).\label{eq:logL}
+\end{equation}
+
+When minimizing this equation we can ignore the last term, $\ln(y_i!)$ because it is independent of the parameters we are fitting and therefore constant. We are then left with only the first two terms in the sum. For the minimization we will make use of the downhill simplex method where we initialize one of the vertices of the first simplex using the same parameters as before ($a=2.4$, $b=0.25$, $c=1.6$). We initialize the other three vertices by adding one to parameter $i$ for vertex $i$.
+
+We also attempted to implement the Quasi-Newton method to minimize the log likelihood function, however this also has proven unsuccesful due to extremely steep gradients which often led the line minimization algorithm to regions in parameter space where the likelihood function is not defined. This only led to NaN values as a result for the parameters. While not used, the code is still included at the end of this report.
+
+\subsection{Fit Results}\label{sec:fitresults}
+
+
