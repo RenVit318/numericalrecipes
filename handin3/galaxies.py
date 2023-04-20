@@ -66,7 +66,7 @@ N(x) Max: {max_val}""")
     
 def make_plot_alldata():
     """Make a plot showcasing all raw, binned data for the report"""
-    basename = 'data/satgals_m1'
+    basename = 'satgals_m1'
     xmin = 1e-4 # cannot take zero because it messes with log and powers
     xmax = 5
     Nbins = 20
@@ -190,7 +190,7 @@ def fit_data():#xlim, ylim):
         file.write(stats_txt)
         file.close()
     with open('results/full_fitresults.txt', 'w') as file:
-        file.write(full_fitres_txt_
+        file.write(full_fitres_txt)
         file.close()
 
 

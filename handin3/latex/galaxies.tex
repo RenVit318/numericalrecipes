@@ -45,6 +45,8 @@ We import the five datafiles provided for this hand-in which contain satellite g
 
 In the next two subsections we will first describe our two approaches to fit equation \ref{eq:Nx} to these distributions. In Section \ref{sec:fitresults} we present the results of our fitting algorithms applied to the data, combined with a brief statistical analysis.
 
+All of the accuracies throughout the following code blocks are set such that the numerically computed values are close to the 'real' values, and the total computing time is limited to no more than ten minutes.
+
 \lstinputlisting[caption={Code to import data, and make the plot of Figure \ref{fig:sat_data}}, linerange={9-23, 67-97}]{galaxies.py}
 \lstinputlisting[caption={Code that calls the fitting procedures and performs the statistical tests}, linerange={100-194}]{galaxies.py}
 
@@ -59,7 +61,7 @@ These data are discrete counts, so therefore they should be fit by a Poisson dis
 Where $x_i$ and $y_i$ are the bin center and bin counts respectively. $\mu$ is a function of the parameter describing the expected value in any particular bin, which is given by
 
 \begin{equation}
-    \mu\left(x_i | \boldsymbol{p})\right) = \tilde N_i = \int_{x_i}^{x_{i+1}} N(x)dx.\label{eq:mean}
+    \mu\left(x_i | \boldsymbol{p}\right) = \tilde N_i = \int_{x_i}^{x_{i+1}} N(x)dx.\label{eq:mean}
 \end{equation}
 
 We minimize Equation \ref{eq:chi2} for each dataset separately using the Levenberg-Marquardt algorithm. As a good starting guess we use the same parameters as in Section \ref{sec:maxi}, i.e. $a=2.4$, $b=0.25$, $c=1.6$. Another important thing to note is that the normalization constant $A$ is a function of these three parameters which keep changing. We therefore compute a new value for $A$ each time the parameters are shift by first integrating over $N(x)$ from $x_{min}=10^{-4}$ to $x_{max}=5$ using Romberg integration and $A=1$. We then compute $A$ by dividing $\left<N_{sat}\right>$ by the result of this integral.
@@ -149,7 +151,7 @@ A Q value lower than $\sim~0.1$ would indicate that our fit is bad. Unfortunatel
 
 The only thing one might be able to conclude from these statistics is the fact that, while the fits look reasonably good when inspected visually, when analyzing them quantiatively, with the G-statistic, they are actually quite bad. Although it is also important to note here that another statistic might have yielded better, or at least different, results than what is presented here.
 
-\lstinputlisting[caption={Unrounded numerical values for the fitting parameters presented in Table \ref{tab:fit_vals}.}]{results/full_fitresults.txt}
+\lstinputlisting[caption={Raw textfile containing the unrounded numerical values for the fitting parameters presented in Table \ref{tab:fit_vals}. The column names are the same as there.}]{results/full_fitresults.txt}
 \newpage
 \lstinputlisting[caption={Code for the Quasi-Newton algorithm which was too prone to divergence and is therefore sadly unused in this report}, firstline={380}]{ancillary.py}
 
