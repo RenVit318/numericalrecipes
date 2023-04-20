@@ -1,17 +1,17 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.8)  19 APR 2023 17:30
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.8)  20 APR 2023 11:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**latex/maintex
+**latex/main.te
 
 ! Emergency stop.
-<*> latex/maintex
+<*> latex/main.te
                  
 End of file on the terminal!
 
  
 Here is how much of TeX's memory you used:
- 4 strings out of 480247
+ 5 strings out of 480247
  124 string characters out of 5896152
  283961 words of memory out of 5000000
  18049 multiletter control sequences out of 15000+600000

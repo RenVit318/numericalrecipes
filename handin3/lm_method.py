@@ -233,7 +233,7 @@ def beta_k(dchi_dp):
 
 
 def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True, 
-                        w=10, lmda=1e-3, chi_acc=1, max_iter=int(1e2),
+                        w=10, lmda=1e-3, chi_acc=1e-3, max_iter=int(1e2),
                         epsilon = 1e-13, # fit procedure params
                         chisq_like_poisson=False,
                         h_start=0.1, dec_factor=2, target_acc=1e-13):  # derivative params
@@ -249,7 +249,7 @@ def levenberg_marquardt(xdata, ydata, sigma, func, guess, linear=True,
         chi2 = compute_chi_sq(xdata, ydata, sigma, func, guess)
     
     N = len(xdata) # Number of data points
-    M = len(guess) # Number of parameters
+    M = len(guess) # Number of parameters	
     b = Matrix(num_columns=1, num_rows=M)
     params = guess
 

@@ -2,98 +2,8 @@
 import numpy as np
 import matplotlib.pyplot
 
-# CODE FOR 1-DIMENSIONAL FUNCTION MINIMIZATION
-def parabola_min_analytic(a, b, c, fa, fb, fc):
-    """Analytically computes the x-value of the minimum of a parabola
-    that crosses a, b and c
-    """
-    top = (b-a)**2 * (fb-fc)  - (b-c)**2 * (fb-fa)
-    bot = (b-a) * (fb-fc) - (b-c) * (fb-fa)
-    return b - 0.5*(top/bot)
-
-
-def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=10000):
-    """Given two points [a, b], attempts to return a bracket triplet
-    [a, b, c] such that f(a) > f(b) and f(c) > f(b).
-    Note we only compute f(d) once for each point to save computing time"""
-    a, b = bracket
-    fa, fb = func(a), func(b)
-    direction = 1 # Indicates if we're moving right or left
-    if fa < fb:
-        # Switch the two points
-        a, b = b, a
-        fa, fb = fb, fa
-        direction = -1 # move to the left
-
-    c = b + direction * (b - a) *w
-    fc = func(c)
-    
-    for i in range(max_iter):
-        if fc > fb:
-            return np.array([a, b, c])  , i
-
-        d = parabola_min_analytic(a, b, c, fa, fb, fc)
-        fd = func(d)
-        # We might have a bracket if b < d < c
-        if (d>b) and (d<c):
-            if fd > fb:
-                return np.array([a, b, d]), i+1
-            elif fd < fc:
-                return np.array([b, d, c]), i+1
-            # Else we don't want this d
-            print('no parabola, in between b and c')
-            d = c + direction * (c - b) * w
-        elif (d-b) > 100*(c-b): # d too far away, don't trust it
-            print('no parabola, too far away')
-            d = c + direction * (c - b) * w
-        elif d < b:
-            print('d smaller than b')
-
-        # we shifted but didn't find a bracket. Go again
-        a, b, c = b, c, d
-        fa, fb, fc = fb, fc, fd
-
-    print('WARNING: Max. iterations exceeded. No bracket was found. Returning last values')
-    return np.array([a, b, c]), i+1
-
-
-def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
-    """Once we have a start 3-point bracket surrounding a minima, this function iteratively
-    tightens the bracket to search of the enclosed minima using golden section search."""
-    w = 2. -  (1.+np.sqrt(5))/2 # 2 - golden ratio
-    a, b, c = bracket
-    fa, fb, fc = func(a), func(b), func(c)
-    
-    for i in range(max_iter):
-        # Set new point in the largest interval
-        # We do this separately because the bracket propagation can just not be generalized sadly
-        if np.abs(c-b) > np.abs(b-a): # we tighten towards the right
-            d = b + (c-b)*w
-            fd = func(d)
-            if fd < fb: # min is in between b and c
-                a, b, c = b, d, c
-                fa, fb, fc = fb, fd, fc
-            else: # min is in between a and d
-                a, b, c = a, b, d 
-                fa, fb, fc = fa, fb, fd
-        else: # we tighten towards the left
-            d = b + (a-b)*w
-            fd = func(d)
-            if fd < fb: # min is in between a and b
-                a, b, c = a, d, b
-                fa, fb, fc = fa, fd, fb
-            else: # min is in between d and c
-                a, b, c = d, b, c
-                fa, fb, fc = fd, fb, fc            
-        
-        if np.abs(c-a) < target_acc:
-            return [b,d][np.argmin([fb, fd])], i+1 # return the x point corresponding to the lowest f(x)
-
-    print("Maximum Number of Iterations Reached")
-    return b, i+1
-
 # INTEGRATION
-def romberg_integration(func, a, b, order, open_formula=False):
+def romberg_integration(func, a, b, order):
     """Integrate a function, func, using Romberg Integration over the interval [a,b]
     This function usually sets h_start = b-a to sample from the widest possible interval.
     If open_formula is set to True, it assumes the function is undefined at either a or b
@@ -105,13 +15,8 @@ def romberg_integration(func, a, b, order, open_formula=False):
     h = b - a
     N_p = 1
 
-    # fill in first estimate, don't do this if we cant evaluate at the edges
-    if open_formula:
-        # First estimate will be with h = (b-a)/2
-        start_point = 0
-    else:
-        r_array[0] = 0.5*h*(func(b) - func(a))
-        start_point = 1
+    r_array[0] = 0.5*h*(func(b) - func(a))
+    start_point = 1
 
     # First iterations to fill out estimates of order m
     for i in range(start_point, order):
@@ -135,6 +40,7 @@ def romberg_integration(func, a, b, order, open_formula=False):
 
     return r_array[0]
 
+
 # DIFFERENTIATION
 def central_difference(func, x, h):
     """Comptue the derivative of a function evaluated at x, with step size h"""
@@ -144,7 +50,6 @@ def ridders_equation(D1, D2, j, dec_factor):
     """Ridders Equation used to combine two estimates at different h"""
     j_factor = dec_factor**(2.*(j+1.))
     return (j_factor * D2 - D1)/(j_factor - 1)
-
 
 def ridders_method(func, x_ar, h_start=0.1, dec_factor=2, target_acc=1e-10, approx_array_length=15):
     """Compute the derivative of a function at a point, or points x using Ridder's Method
@@ -184,6 +89,7 @@ def ridders_method(func, x_ar, h_start=0.1, dec_factor=2, target_acc=1e-10, appr
 
     return derivative_array, unc_array
 
+
 # SORTING
 def sort_subarrays(a1, a2, k1, k2):
     """Takes two subarrays 1,2 with indices a1, a2 and values k1, k2 and combines these
@@ -192,7 +98,6 @@ def sort_subarrays(a1, a2, k1, k2):
     N2 = len(a2)
 
     # We built up a new instance of our sorting array. This is not memory efficient
-    # TODO: Study the algorithm below to try and find a better method
     a_sorted = np.zeros(N1+N2)
     
     if N1 == 0: 
@@ -244,8 +149,6 @@ def sort_subarrays(a1, a2, k1, k2):
                 a_sorted[idx1+j] = a2[j]
             return a_sorted
 
-
-
 def merge_sort(a=None, key=None):
     """Sorts the array or list using merge sort. This function iteratively
     builds up the array from single elements which are sorted by sort_subarrays
@@ -292,6 +195,7 @@ def merge_sort(a=None, key=None):
            
     return a
 
+
 # MINIMIZATION
 def parabola_min_analytic(a, b, c, fa, fb, fc):
     """Analytically computes the x-value of the minimum of a parabola
@@ -301,14 +205,12 @@ def parabola_min_analytic(a, b, c, fa, fb, fc):
     bot = (b-a) * (fb-fc) - (b-c) * (fb-fa)
     return b - 0.5*(top/bot)
 
-
 def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=10000):
     """Given two points [a, b], attempts to return a bracket triplet
     [a, b, c] such that f(a) > f(b) and f(c) > f(b).
     Note we only compute f(d) once for each point to save computing time"""
     a, b = bracket
     fa, fb = func(a), func(b)
-    
     direction = 1 # Indicates if we're moving right or left
     if fa < fb:
         # Switch the two points
@@ -349,7 +251,6 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
     print('WARNING: Max. iterations exceeded. No bracket was found. Returning last values')
     return np.array([a, b, c]), i+1
 
-
 def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
     """Once we have a start 3-point bracket surrounding a minima, this function iteratively
     tightens the bracket to search of the enclosed minima using golden section search."""
@@ -361,8 +262,6 @@ def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
         # Set new point in the largest interval
         # We do this separately because the bracket propagation can just not be generalized sadly
         if np.abs(c-b) > np.abs(b-a): # we tighten towards the right
-            print(a,b,c)
-            print(fa,fb,fc)
             d = b + (c-b)*w
             fd = func(d)
             if fd < fb: # min is in between b and c
@@ -386,104 +285,6 @@ def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
 
     print("Maximum Number of Iterations Reached")
     return b, i+1
-
-
-def line_minimization(func, x_vec, step_direction, method=golden_section_search, minimum_acc=0.1):
-    """"""
-    # Make a function f(x+lmda*n)
-    minim_func = lambda lmda: func(x_vec + lmda * step_direction)
-
-    # The parameter landscape is very prone to diverging, and the gradients are very steep. Attempt to keep steps small!
-    inv_stepdirection = np.abs(1./np.sum(step_direction)) # roughly equal to 1
-    bracket_edge_guess = [0, 1]#inv_stepdirection]  # keeps the steps realatively small to combat divergence
-    bracket, _ = make_bracket(minim_func, bracket_edge_guess) # make a 3-point bracket surrounding a minimum
-
-    # Use a 1-D minimization method to find the 'best' lmda
-    minimum, _ = method(minim_func, bracket, target_acc=minimum_acc)
-    return minimum
-
-
-
-def compute_gradient(func, x_vec):
-    """Computes the gradient of a multi-dimensional function by applying
-    Ridder's method on each dimension separately"""
-    dim = x_vec.shape[0]
-    nabla_f = np.zeros(dim)
-
-    for i in range(dim):
-        # The function below transforms the multi-dimensional function func
-        # into a function that only varies along dimension i
-        func_1d = lambda xi: func([*x_vec[:i], xi, *x_vec[i+1:]])
-        nabla_f[i] = ridders_method(func_1d, [x_vec[i]], target_acc=1e-5)[0][0] # we don't store the uncertainty now     
-    return nabla_f
-    
-
-def bfgs_update(H, delta, D):
-    """Updates the approximated Hessian using the Broyden–Fletcher–Goldfarb–Shannon
-    algorithm, used for optimization with the quasi-Newton method.
-    INPUTS:
-        H: NxN ndarray, approximation of the Hessian
-        delta: N ndarray, last taken optimization step in x_vec
-        D: N ndarray, difference between new and old gradients
-    OUTPUTS:
-        H': NXN ndarray, updated approximation of the Hessian        
-    """
-    # Pre-compute some values for efficiency and clarity 
-    deltaD = delta @ D
-    HD = H @ D
-    DHD = D @ HD
-
-    u = (delta/deltaD) - (HD/DHD)
-
-    H_update1 = outer_product(delta, delta)/deltaD
-    H_update2 = outer_product(HD, HD)/DHD
-    H_update3 = DHD * outer_product(u, u)
-    return H + H_update1 - H_update2 + H_update3
-
-
-def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_iter=int(1e3)):
-    """"""
-    # SETUP
-    dim = start.shape[0]
-    H = np.eye(dim)
-    x_vec = start
-    # Do this before the loop because we compute the gradient at x_i+1 in loop i
-
-    gradient = compute_gradient(func, x_vec)
-    
-    for i in range(max_iter):        
-        step_direction = -H @ gradient
-        step_size = line_minimization(func, x_vec, step_direction)
-        # Make the step
-        delta = step_size * step_direction
-        x_vec += delta
-        print(step_direction, step_size)
-        # Check if we are going to  make a small step 
-        if np.abs(np.max(delta/x_vec)) < target_step_acc:
-            return x_vec, i
-        print(gradient)
-        # Compute the gradient at the new point, and check relative convergence
-        new_gradient = compute_gradient(func, x_vec)
-        if np.abs(np.max((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
-            return x_vec, i
-        
-        # If no accuracies are reached yet, sadly we have to continue
-        D = new_gradient - gradient    
-        gradient = new_gradient
-        H = bfgs_update(H, delta, D)
-
-    return x_vec, i
-
-def outer_product(v, w):
-    """Compute the outer product of two vectors. This is a matrix A with 
-           A_ij = v_i * w_j
-    NOTE: This function doesn't assume the vectors are of the same size, and 
-    this function is not symmetric (outer(v,w) != outer(w,v))
-    """
-    A = np.zeros((v.shape[0], w.shape[0]))
-    for i in range(v.shape[0]):
-        A[i] = v[i] * w
-    return A
 
 
 # CODE FOR THE N-DIMENSIONAL DOWNHILL SIMPLEX
@@ -574,5 +375,104 @@ def downhill_simplex(func, start, shift_func=lambda x: x+1, max_iter=int(1e5), t
 
     print('Maximum Number of Evaluations Reached')
     return vertices[0], i            
+
+
+# QUASI-NEWTON
+def line_minimization(func, x_vec, step_direction, method=golden_section_search, minimum_acc=0.1):
+    """"""
+    # Make a function f(x+lmda*n)
+    minim_func = lambda lmda: func(x_vec + lmda * step_direction)
+
+    # The parameter landscape is very prone to diverging, and the gradients are very steep. Attempt to keep steps small!
+    inv_stepdirection = np.abs(1./np.sum(step_direction)) # roughly equal to 1
+    bracket_edge_guess = [0, 1]#inv_stepdirection]  # keeps the steps realatively small to combat divergence
+    bracket, _ = make_bracket(minim_func, bracket_edge_guess) # make a 3-point bracket surrounding a minimum
+
+    # Use a 1-D minimization method to find the 'best' lmda
+    minimum, _ = method(minim_func, bracket, target_acc=minimum_acc)
+    return minimum
+
+
+
+def compute_gradient(func, x_vec):
+    """Computes the gradient of a multi-dimensional function by applying
+    Ridder's method on each dimension separately"""
+    dim = x_vec.shape[0]
+    nabla_f = np.zeros(dim)
+
+    for i in range(dim):
+        # The function below transforms the multi-dimensional function func
+        # into a function that only varies along dimension i
+        func_1d = lambda xi: func([*x_vec[:i], xi, *x_vec[i+1:]])
+        nabla_f[i] = ridders_method(func_1d, [x_vec[i]], target_acc=1e-5)[0][0] # we don't store the uncertainty now     
+    return nabla_f
+    
+
+def bfgs_update(H, delta, D):
+    """Updates the approximated Hessian using the Broyden-Fletcher-Goldfarb-Shannon
+    algorithm, used for optimization with the quasi-Newton method.
+    INPUTS:
+        H: NxN ndarray, approximation of the Hessian
+        delta: N ndarray, last taken optimization step in x_vec
+        D: N ndarray, difference between new and old gradients
+    OUTPUTS:
+        H': NXN ndarray, updated approximation of the Hessian        
+    """
+    # Pre-compute some values for efficiency and clarity 
+    deltaD = delta @ D
+    HD = H @ D
+    DHD = D @ HD
+
+    u = (delta/deltaD) - (HD/DHD)
+
+    H_update1 = outer_product(delta, delta)/deltaD
+    H_update2 = outer_product(HD, HD)/DHD
+    H_update3 = DHD * outer_product(u, u)
+    return H + H_update1 - H_update2 + H_update3
+
+
+def quasi_newton(func, start, target_step_acc=1e-3, target_grad_acc=1e-3, max_iter=int(1e3)):
+    """"""
+    # SETUP
+    dim = start.shape[0]
+    H = np.eye(dim)
+    x_vec = start
+    # Do this before the loop because we compute the gradient at x_i+1 in loop i
+
+    gradient = compute_gradient(func, x_vec)
+    
+    for i in range(max_iter):        
+        step_direction = -H @ gradient
+        step_size = line_minimization(func, x_vec, step_direction)
+        # Make the step
+        delta = step_size * step_direction
+        x_vec += delta
+        #print(step_direction, step_size)
+        # Check if we are going to  make a small step 
+        if np.abs(np.max(delta/x_vec)) < target_step_acc:
+            return x_vec, i
+        #print(gradient)
+        # Compute the gradient at the new point, and check relative convergence
+        new_gradient = compute_gradient(func, x_vec)
+        if np.abs(np.max((new_gradient - gradient)/(0.5*(new_gradient+gradient)))) < target_grad_acc:
+            return x_vec, i
+        
+        # If no accuracies are reached yet, sadly we have to continue
+        D = new_gradient - gradient    
+        gradient = new_gradient
+        H = bfgs_update(H, delta, D)
+
+    return x_vec, i
+
+def outer_product(v, w):
+    """Compute the outer product of two vectors. This is a matrix A with 
+           A_ij = v_i * w_j
+    NOTE: This function doesn't assume the vectors are of the same size, and 
+    this function is not symmetric (outer(v,w) != outer(w,v))
+    """
+    A = np.zeros((v.shape[0], w.shape[0]))
+    for i in range(v.shape[0]):
+        A[i] = v[i] * w
+    return A
 
 

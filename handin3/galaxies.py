@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from ancillary import golden_section_search, make_bracket, romberg_integration
+from ancillary import golden_section_search, make_bracket
 from plotting import set_styles, hist
-from fitting import fit_satellite_data_chisq, fit_procedure, compute_mean_satellites, fit_satellite_data_poisson, n, N
+from fitting import fit_satellite_data_chisq, compute_mean_satellites, fit_satellite_data_poisson, N
 from scipy.special import gammainc, gamma
+import time
 
 def readfile(filename):
     """Code to read in the halo data, copied from the hand in instructions:
@@ -20,7 +21,6 @@ def readfile(filename):
     radius = np.array(radius, dtype=np.float64)
     f.close()
     return radius, nhalo  # Return the virial radius for all the satellites in the file, and the number of halos
-
 
 
 def maximization():
@@ -99,20 +99,22 @@ def make_plot_alldata():
 
 def fit_data():#xlim, ylim):
     """Code for Q1b-d"""
-    basename = 'data/satgals_m1'
+    basename = 'satgals_m1'
     xmin = 1e-4 # cannot take zero because it messes with log and powers
     xmax = 5
     Nbins = 20
     do_log = True
     no_bins = False
     guess = np.array([2.4, 0.25, 1.5])
-    fitres_txt_chi2 = ""
-    fitres_txt_poisson = ""
+
+    fitres_txt = ""
+    full_fitres_txt = ""
     stats_txt = ""
-    
+    fig, axs = plt.subplots(3, 2, sharex=True, sharey=True, tight_layout=True, figsize=(8, 12))
+
     # do all of the below for each dataset separately
     for i in range(1,6):
-    #for i in range(5,6):
+        ax = axs.flatten()[i-1]
         radius, nhalo = readfile(f'{basename}{i}.txt')
         n, bin_edges, bin_centers = hist(radius, xmin, xmax, Nbins, do_log, return_centers=True)
 
@@ -128,24 +130,22 @@ def fit_data():#xlim, ylim):
         # 1c. Now fit a Poisson distribution to this data using the Quasi-Newton method
         print('Starting Poisson Fitting..')
         if no_bins:
-            params_poisson, logL, niter_poisson = fit_satellite_data_poisson(radius, None, Nsat, params_chi2, bin_edges, no_bins)
+            params_poisson, logL, niter_poisson = fit_satellite_data_poisson(radius, None, Nsat, guess, bin_edges, no_bins)
         else: # feed it only nbins data points if wanted
             params_poisson, logL, niter_poisson = fit_satellite_data_poisson(bin_centers, n, Nsat, guess, bin_edges, no_bins)
-        print(f'\nPoisson Fit:\nlog L = {logL}\na, b, c = {params_poisson}\n')
+        print(f'\nPoisson Fit:\nlog L = {logL}\n<Nsat> = {Nsat}\na, b, c = {params_poisson[0]}, {params_poisson[1]}, {params_poisson[2]}\n')
 
         # Bin the Poisson and Chi squared models to match the datA
         xx = np.logspace(np.log10(xmin), np.log10(xmax), 100)
-        fit_func = lambda x, a, b, c: fit_procedure(x, Nsat, a, b, c, xmin, xmax)
         chi2_binned = nhalo * compute_mean_satellites(xx, *params_chi2, bin_edges, Nsat) 
         poisson_binned = nhalo * compute_mean_satellites(xx, *params_poisson, bin_edges, Nsat) 
 
         # Statistical Tests
-        DoF = len(radius) - 3 # degrees of freedom
+        DoF = Nbins - 4 # degrees of freedom
     
         # G-test for the chi squared model because it is binned
         # mask out all bins without observations: lim_O->0 [O ln(O/E)] = 0 for E != 0
         zero_mask = n != 0
-
         G_chi2 = 2. * np.sum(n[zero_mask] * np.log((n/chi2_binned)[zero_mask]))
         G_poisson = 2. * np.sum(n[zero_mask] * np.log((n/poisson_binned)[zero_mask]))
         Q_chi2 = (gammainc(DoF/2., G_chi2/2.)/gamma(DoF/2.))
@@ -154,42 +154,53 @@ def fit_data():#xlim, ylim):
         print(f'Q_chi2 = {Q_chi2}, Q_poisson = {Q_poisson}')
          
         # Plotting 
-        fig, ax = plt.subplots(1,1)
         ax.step(bin_centers, n, label='Data', where='mid')
-        ax.scatter(bin_centers, n, c='black', marker='X', s=50, zorder=5, label='Fit Points')
-
-        ax.step(bin_centers, chi2_binned, where='mid', label=r'$\chi^2$ Fit')
-        ax.step(bin_centers, poisson_binned, where='mid', label='Poisson Fit')
-
+        ax.scatter(bin_centers, n, c='black', marker='X', s=25, zorder=5, label='Fit Points')
+        ax.step(bin_centers, chi2_binned, where='mid', label=r'$\chi^2$ Fit', ls='--')
+        ax.step(bin_centers, poisson_binned, where='mid', label='Poisson Fit', ls='--')
 
         ax.set_title(rf'M = $10^{{{i+10}}} M_{{\odot}}$')      
-        ax.set_xlabel(r'$r/r_{vir}$')
-        ax.set_ylabel(r'$N_{sat}(r)/N_{halo}$')
         ax.set_xscale('log')
         ax.set_yscale('log')
-        plt.legend()
+        ax.set_ylim(10**-5.5, 10**5.5)
+        ax.legend()
+              
+        fitres_txt += f'$10^{{{i+10}}}$ & {Nsat:.2E} & {params_chi2[0]:.2f} & {params_chi2[1]:.2f} & {params_chi2[2]:.2f} & {chi2:.2E} & \\\\ \n'
+        fitres_txt += f' & & {params_poisson[0]:.2f} & {params_poisson[1]:.2f} & {params_poisson[2]:.2f} & & {logL:.2E}\\\\ \n'
+        full_fitres_txt += f'$10^{{{i+10}}}$ & {Nsat} & {params_chi2[0]} & {params_chi2[1]} & {params_chi2[2]} & {chi2} & \\\\ \n'
+        full_fitres_txt += f' & & {params_poisson[0]} & {params_poisson[1]} & {params_poisson[2]} & & {logL}\\\\ \n'
+        stats_txt += f'$10^{{{i+10}}}$ & $\chi^2$ & {G_chi2} & {Q_chi2} \\\\ \n'
+        stats_txt += f'$10^{{{i+10}}}$ & Poisson & {G_poisson} & {Q_poisson} \\\\ \n'
 
-        plt.savefig(f'results/M1{i}_fit.png', bbox_inches='tight')
-        fitres_txt_chi2 += f'M1{i}\t{Nsat}\t{params_chi2[0]}\t{params_chi2[1]}\t{params_chi2[2]}\t{chi2}\t{niter_chi2}\t{G_chi2}\t{Q_chi2}\n'
-        fitres_txt_poisson += f'    M1{i}\t{Nsat}\t{params_poisson[0]}\t{params_poisson[1]}\t{params_poisson[2]}\t{logL}\t{niter_poisson}\t{G_poisson}\t{Q_chi2}\n'
+    # Figure Labels
+    for ax in axs[:,0]:
+        ax.set_ylabel(r'$N_{sat}(r)$')
+    for ax in axs[-1]:
+        ax.set_xlabel(r'$r/r_{vir}$')
+    plt.suptitle('Fit Results') 
+    plt.savefig('results/fitresults.png', bbox_inches='tight')    
 
+    fitres_txt = fitres_txt[:-3] # remove the last '\\ '
+    stats_txt = stats_txt[:-3]
+    # Textfile writing
     with open('results/fitresults.txt', 'w') as file:
-        file.write('Chi-Squared Fit Results\n')
-        file.write('Mass\tNsat\ta\tb\tc\tChi^2\tNiter\tG\tQ\n')
-        file.write(fitres_txt_chi2)
-        
-        file.write('\nPoisson Fit Results\n')        
-        file.write('Mass\tNsat\ta\tb\tc\tlog L\tNiter\tG\tQ\n')
-        file.write(fitres_txt_poisson)
+        file.write(fitres_txt)
+        file.close()
+    with open('results/stats.txt', 'w') as file:
+        file.write(stats_txt)
+        file.close()
+    with open('results/full_fitresults.txt', 'w') as file:
+        file.write(full_fitres_txt_
+        file.close()
 
-import time
+
 def full_run():
     t0 = time.time()
     set_styles()
     maximization()
     make_plot_alldata()
     fit_data()
-    print(f'total runtime {time.time()-t0}s')
+    print(f'Total Wall Runtime {time.time()-t0}s')
     
 
 def main():

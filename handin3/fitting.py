@@ -25,29 +25,20 @@ def compute_mean_satellites(x, a, b, c, bin_edges, Nsat):
     sigma is not used, but we need to pass it for function interoperability"""
     # mean = variance = int(N(x))dx over the bin i
     N_fit = lambda x: N(x, 1, Nsat, a, b, c)
-    integral = romberg_integration(N_fit, bin_edges[0], bin_edges[-1], 6)
+    integral = romberg_integration(N_fit, bin_edges[0], bin_edges[-1], 8)
     A = Nsat/integral
     N_fit = lambda x: N(x, A, Nsat, a, b, c)
     
     if len(x) == 1: # Evaluate only at a single data point
         # the np.min clause is to ensure we never get an index errors
         bin_idx = np.min([np.argmin(bin_edges-x), len(bin_edges)]) 
-        return romberg_integration(N_fit, bin_edges[bin_idx], bin_edges[bin_idx+1], 6)
+        return romberg_integration(N_fit, bin_edges[bin_idx], bin_edges[bin_idx+1], 8)
            
     mean_ar = np.zeros(len(bin_edges)-1)
     for i in range(len(mean_ar)):  
-        mean_ar[i] = romberg_integration(N_fit, bin_edges[i], bin_edges[i+1], 6)
+        mean_ar[i] = romberg_integration(N_fit, bin_edges[i], bin_edges[i+1], 8)
 
     return mean_ar
-
-def fit_procedure(x, Nsat, a, b, c, xmin, xmax):
-    """Transforms N into a function we can fit where we iteratively compute A. 
-    The calculation of A is pulled from handin 2"""
-    N_fit = lambda x: N(x, 1, Nsat, a, b, c)
-    integral = romberg_integration(N_fit, xmin, xmax, 10)
-    A = Nsat/integral
-    N_fit = lambda x: N(x, A, Nsat, a, b, c)
-    return N(x, A, Nsat, a, b, c)
 
 def fit_satellite_data_chisq(bin_centers, n, Nsat, guess, bin_edges):
     """Function applying the Levenberg-Marquadt algorithm to implement the
@@ -61,11 +52,8 @@ def fit_satellite_data_chisq(bin_centers, n, Nsat, guess, bin_edges):
     return levenberg_marquardt(bin_centers, n, None, mean_func, guess, linear=False,
                                chisq_like_poisson=True)
 
-    
 
 ## POISSON FITTING ##
- 
-
 def poisson_fit_func(x, y, delta_x, bin_edges, Nsat, params, xmin, xmax, no_bins):
     """Procedure to be iteratively called in quasi_newton to fit a Poisson
     distribution to the satellite galaxy data. Adjusted from the chi^2 fit
@@ -85,7 +73,7 @@ def poisson_fit_func(x, y, delta_x, bin_edges, Nsat, params, xmin, xmax, no_bins
         else:
             int_min, int_max = bin_edges[i], bin_edges[i+1]  
             
-        mean_ar[i] = romberg_integration(N_fit, int_min, int_max, 7)
+        mean_ar[i] = romberg_integration(N_fit, int_min, int_max, 8)
 
     if no_bins:
         ll = -1.*np.sum(np.log(mean_ar)) # plus an integral we take as constant
@@ -93,8 +81,6 @@ def poisson_fit_func(x, y, delta_x, bin_edges, Nsat, params, xmin, xmax, no_bins
         ll = -1.*np.sum(y*np.log(mean_ar) - mean_ar) # plus a factor of y! which is constant
 
     return ll
-
-
 
 def fit_satellite_data_poisson(x, y, Nsat, guess, bin_edges, no_bins):
     """Computes the Poisson likelihood of a function in the limit
