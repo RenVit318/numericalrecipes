@@ -6,7 +6,7 @@ In this section we will investigate the spherical distribution of satellite gala
     n(x) = A\left<N_{sat}\right>\left(\frac{x}{b}\right)^{a-3}\exp{\left[-\left(\frac{x}{b}\right)^{c}\right]}\label{eq:nx}
 \end{equation}
 
-Here $x$ is the radius relative to the virial radius, i.e. $x \equiv r/r_{vir}$ with $x < x_{max} = 5$. $a$, $b$ and $c$ are free parameters, $\left<N_{sat}\right>$ is the mean number of satellites per halo and $A = A(a,b,c)$ normalizes this profile such that $\int\int\int_V n(x)dV = \left<N_{sat}\right>$. In this work we will mainly look at tt the number of satellites in the infinitesimal range $\left[x, x+dx\right>$. This is given by
+Here $x$ is the radius relative to the virial radius, i.e. $x \equiv r/r_{vir}$ with $x < x_{max} = 5$. $a$, $b$ and $c$ are free parameters, $\left<N_{sat}\right>$ is the mean number of satellites per halo and $A = A(a,b,c)$ normalizes this profile such that $\int\int\int_V n(x)dV = \left<N_{sat}\right>$. In this work we will mainly look at the number of satellites in the infinitesimal range $\left[x, x+dx\right>$. This is given by
 
 \begin{equation}
     N(x)dx = n(x)4\pi x^2dx\label{eq:Nx}
@@ -20,7 +20,7 @@ We start by searching for the maximum of the distribution given by equation \ref
 
 \lstinputlisting[caption={Results of the maximization algorithm.}]{results/maxi_results.txt}
 
-We also show the distribution and the exact location of this peak in Figure \ref{fig:maximum}. We can see that the algorithms have perfectly discovered the maximium of this distribution.
+We also show the distribution and the exact location of this peak in Figure \ref{fig:maximum}. We can see that the algorithms have perfectly discovered the maximum of this distribution.
 
 \begin{figure}
     \centering
@@ -34,7 +34,7 @@ We also show the distribution and the exact location of this peak in Figure \ref
 
 \subsection{Data Fitting}\label{sec:datafitting}
 
-We import the five datafiles provided for this hand-in which contain satellite galaxies for halos in increasing mass bins ranging from $10^{11} M_{\odot}$ up to $10^{15} M_{\odot}$. Each file contains a number of halos, $N_{halo}$, and the distances of each satellite galaxy from its center massive galaxy. For each dataset we can immediately compute $\left<N_{sat}\right>$ by dividing the total number of satellite galaxies by $N_{halo}$. We bin the data in 20 bins from $x = 10^{-4}$ to $x=5$ in log-space. We set the lower limit above $x=0$ for computational reasons because equation \ref{eq:Nx} is not defined there. We opt to show the distributions in log-space to better visualize the low $x$ region. The decision for 20 bins is relatively arbitrary but appears to result in plots that are easily interpretable. We show the binned data together with $N_{halo}$ for each dataset in Figure \ref{fig:sat_data}.
+We import the five data files provided for this hand-in which contain satellite galaxies for halos in increasing mass bins ranging from $10^{11} M_{\odot}$ up to $10^{15} M_{\odot}$. Each file contains a number of halos, $N_{halo}$, and the distances of each satellite galaxy from its center massive galaxy. For each dataset we can immediately compute $\left<N_{sat}\right>$ by dividing the total number of satellite galaxies by $N_{halo}$. We bin the data in 20 bins from $x = 10^{-4}$ to $x=5$ in log-space. We set the lower limit above $x=0$ for computational reasons because equation \ref{eq:Nx} is not defined there. We opt to show the distributions in log-space to better visualize the low $x$ region. The decision for 20 bins is relatively arbitrary but appears to result in plots that are easily interpretable. We show the binned data together with $N_{halo}$ for each dataset in Figure \ref{fig:sat_data}.
 
 \begin{figure}
     \centering
@@ -71,7 +71,7 @@ We minimize Equation \ref{eq:chi2} for each dataset separately using the Levenbe
 
 \subsubsection{Poisson}
 
-For the Poisson fit we have two options: we can either use the same binned data as is used for the $\chi^2$ fit, or we can opt to not use bins at all. In this latter case we pretend as though we did bin the data, however with bin size sufficiently small such that each bin contains either 0 or 1 objects. Doing this allows us to make better use of the data at the cost of more computational load. In the worst case, namely the first dataset, this difference is a factor on the order of $10^4$. Unfortunately while implemented, we have been unable to use this binless fitting as computing time exceeds the maximum alloted time of ten minutes. Therefore we opt to fit the data here using the same bins as in the previous section. The log-likelihood of a Poisson distribution is given as
+For the Poisson fit we have two options: we can either use the same binned data as is used for the $\chi^2$ fit, or we can opt to not use bins at all. In this latter case we pretend as though we did bin the data, however with bin size sufficiently small such that each bin contains either 0 or 1 objects. Doing this allows us to make better use of the data at the cost of more computational load. In the worst case, namely the first dataset, this difference is a factor on the order of $10^4$. Unfortunately while implemented, we have been unable to use this binless fitting as computing time exceeds the maximum allotted time of ten minutes. Therefore we opt to fit the data here using the same bins as in the previous section. The log-likelihood of a Poisson distribution is given as
 
 \begin{equation}
     -\ln \mathcal{L}(\boldsymbol{p}) = -\sum_{i=0}^{N-1} \left(y_i\ln\left[\mu(x_i | \boldsymbol{p}))\right] - \mu(x_i | \boldsymbol{p})) - \ln(y_i!)\right).\label{eq:logL}
@@ -79,7 +79,7 @@ For the Poisson fit we have two options: we can either use the same binned data 
 
 When minimizing this equation we can ignore the last term, $\ln(y_i!)$ because it is independent of the parameters we are fitting and therefore constant. We are then left with only the first two terms in the sum. For the minimization we will make use of the downhill simplex method where we initialize one of the vertices of the first simplex using the same parameters as before ($a=2.4$, $b=0.25$, $c=1.6$). We initialize the other three vertices by adding one to parameter $i$ for vertex $i$.
 
-We also attempted to implement the Quasi-Newton method to minimize the log likelihood function, however this also has proven unsuccesful due to extremely steep gradients which often led the line minimization algorithm to regions in parameter space where the likelihood function is not defined. This only led to NaN values as a result for the parameters. While not used, the code is still included at the end of this report.
+We also attempted to implement the Quasi-Newton method to minimize the log likelihood function, however this also has proven unsuccessful due to extremely steep gradients which often led the line minimization algorithm to regions in parameter space where the likelihood function is not defined. This only led to NaN values as a result for the parameters. While not used, the code is still included at the end of this report.
 
 \lstinputlisting[caption={Code to compute the Poisson likelihood, and to call the minimization functions}, firstline={56}]{fitting.py}
 \lstinputlisting[caption={Downhill simplex code}, linerange={290-377}]{ancillary.py}
@@ -109,7 +109,7 @@ We apply the fitting methods described in the previous sections to each of the d
     \label{tab:fit_vals}
 \end{table}
 
-In the figure we can see that the $\chi^2$ fits appear to have performed quite badly for all datasets, underestimating the amount of satellite galaxies at low $x$ and exteremely overestimating this in the highest $x$ bin in the first three datasets. In the last two sets this pattern appears reversed and the peaks of the data- and model distributions do not match anymore. This is possibly caused by the fact that there is almost no data below $x \sim 10^{-2}$ which confuses the $\chi^2$ statistic. The Poisson fits on the other hand appear to fit quite well to the data. In most of the plots the Poisson fit appears to at most be off by a few from the real data which could just be due to noise. Only in the $10^{11} M_{\odot}$ fit can we see that the Poisson fit appears to be biased towards higher values in the low $x$ end, and appears to be 'off' by a few hundred to a thousand in the highest $x$ bin. 
+In the figure we can see that the $\chi^2$ fits appear to have performed quite badly for all datasets, underestimating the amount of satellite galaxies at low $x$ and extremely overestimating this in the highest $x$ bin in the first three datasets. In the last two sets this pattern appears reversed and the peaks of the data- and model distributions do not match anymore. This is possibly caused by the fact that there is almost no data below $x \sim 10^{-2}$ which confuses the $\chi^2$ statistic. The Poisson fits on the other hand appear to fit quite well to the data. In most of the plots the Poisson fit appears to at most be off by a few from the real data which could just be due to noise. Only in the $10^{11} M_{\odot}$ fit can we see that the Poisson fit appears to be biased towards higher values in the low $x$ end, and appears to be 'off' by a few hundred to a thousand in the highest $x$ bin. 
 
 
 
@@ -149,7 +149,7 @@ the lower incomplete gamma function, and the gamma function respectively which w
 
 A Q value lower than $\sim~0.1$ would indicate that our fit is bad. Unfortunately, this appears to be the case for all of the fits computed in this report. Most of the Q-values reported here take on the exact same value, which is an indication that our G values are extremely high and therefore also statistically extremely bad fits. We see one negative value in the G value for one of the Poisson fits, this in principle should never happen. Especially not a negative number that is as large as this is. This is another strong indication that there is most likely something wrong with the fit for that particular dataset. 
 
-The only thing one might be able to conclude from these statistics is the fact that, while the fits look reasonably good when inspected visually, when analyzing them quantiatively, with the G-statistic, they are actually quite bad. Although it is also important to note here that another statistic might have yielded better, or at least different, results than what is presented here.
+The only thing one might be able to conclude from these statistics is the fact that, while the fits look reasonably good when inspected visually, when analyzing them quantitatively, with the G-statistic, they are actually quite bad. Although it is also important to note here that another statistic might have yielded better, or at least different, results than what is presented here.
 
 \lstinputlisting[caption={Raw textfile containing the unrounded numerical values for the fitting parameters presented in Table \ref{tab:fit_vals}. The column names are the same as there.}]{results/full_fitresults.txt}
 \newpage
