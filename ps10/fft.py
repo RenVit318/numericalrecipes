@@ -1,6 +1,22 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def bit_reversal(x):
+    """Given an arary of indices with length 2^N, bit reverses
+    the indices and returns these reversed indexes. 
+        e.g. 10: 1010 -> 0101 : 5
+             1 : 0001 -> 1000 : 8 (depends on N)"""
+    N = np.log2(x)
+    if int(N) != int(np.ceil(N)):
+        raise ValueError(f'N {N} is not a power of 2')
+    reversed_idxs = np.zeros(N, dtype=int)
+    for i in range(N):
+        bini = bin(i)[2:] # throw out the '0b' part
+        bini = (order - len(bini)) * '0' + bini
+        reversed_idxs[i] = int('0b'+ bini[-1::-1], 2)
+    return reversed_idxs
+
+
 def dft_recursive(x_real, x_im):
     """Recursively apply the discrete fourier transform following
     the Cooley-Tukey algorithm. We deal with complex numbers using
@@ -52,14 +68,10 @@ def fft_recursive(x, epsilon=1e-10):
     order = int(order)
 
     # Start by bit-reversing x to get the 1-el FFT solutions. Could do this faster?
-    reversed_idxs = np.zeros(N, dtype=int)
-    for i in range(N):
-        bini = bin(i)[2:] # throw out the '0b' part
-        bini = (order - len(bini)) * '0' + bini
-        reversed_idxs[i] = int('0b'+ bini[-1::-1], 2)
+    x_real = x
 
     # One element FFT is done
-    x_real = x[reversed_idxs]
+    #x_real = x[reversed_idxs]
     
     x_im = np.zeros(N, dtype=np.float64)
     # Recursively call the discrete fourier transform method and get the fourier transform
@@ -67,19 +79,20 @@ def fft_recursive(x, epsilon=1e-10):
 
     if (x_im < epsilon).any():
         print('Imaginary array is not empty')
+        print(x_im)
     return x_real # throw out the imaginary part
 
 
 def test_fft():
 #    func = lambda x: (2*x + np.sin(2.*np.pi*x/5.) + 3.*np.cos(2.*np.pi*x/2.)) * np.sin(2.*x)
     func = lambda x: np.sin(x)
-    x = np.linspace(0, 20, 256)
+    x = np.linspace(0, 20, 8)
     xx = np.linspace(0, 20, 250)
     y = func(x)
     yy = func(xx)
-
-    y_fft = fft_recursive(y)
-    y_fft_np = np.fft.fft(y)
+    print(type(y))
+    y_fft = fft_recursive(func(x))
+    y_fft_np = np.fft.fft(func(x))
     plt.stem(y_fft, label='Own FFT')
 
     plt.legend()
