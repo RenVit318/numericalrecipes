@@ -6,13 +6,14 @@ def bit_reversal(x):
     the indices and returns these reversed indexes. 
         e.g. 10: 1010 -> 0101 : 5
              1 : 0001 -> 1000 : 8 (depends on N)"""
-    N = np.log2(x)
-    if int(N) != int(np.ceil(N)):
+    N = len(x)#np.log2(len(x))
+    order = np.log2(N)
+    if int(order) != int(np.ceil(order)):
         raise ValueError(f'N {N} is not a power of 2')
     reversed_idxs = np.zeros(N, dtype=int)
     for i in range(N):
         bini = bin(i)[2:] # throw out the '0b' part
-        bini = (order - len(bini)) * '0' + bini
+        bini = (int(order) - len(bini)) * '0' + bini
         reversed_idxs[i] = int('0b'+ bini[-1::-1], 2)
     return reversed_idxs
 
@@ -26,7 +27,8 @@ def dft_recursive(x_real, x_im):
         # Split the array into even and odds, and apply this algorithm to them    
         x_real[::2], x_im[::2] = dft_recursive(x_real[::2], x_im[::2])
         x_real[1::2], x_im[1::2] = dft_recursive(x_real[1::2], x_im[1::2])
-    
+    print('starting an iteration')
+    print(x_real, x_im)
     # Define variables for trigonometric recurrence
     theta = 2.*np.pi / N
     alpha = 2.*(np.sin(theta/2.)**2)   
@@ -34,7 +36,9 @@ def dft_recursive(x_real, x_im):
     cos_k = 1 # the first k is zero  
     sin_k = 0 
     print(theta, alpha, beta)
-    for k in range((N//2) - 1):
+    
+    for k in range(N//2):
+        print(k)
         t_real, t_im = x_real[k], x_im[k]
         k2 = k + N//2 
         # Compute the product of WNk and Hk        
@@ -52,7 +56,7 @@ def dft_recursive(x_real, x_im):
 
         cos_k = cos_k - alpha*cos_k - beta*sin_k
         sin_k = sin_k - alpha*sin_k + beta*cos_k
-
+        print(x_real)
     return x_real, x_im
         
 
@@ -71,13 +75,14 @@ def fft_recursive(x, epsilon=1e-10):
     x_real = x
 
     # One element FFT is done
+    #reversed_idxs = bit_reversal(np.arange(N))
     #x_real = x[reversed_idxs]
     
     x_im = np.zeros(N, dtype=np.float64)
     # Recursively call the discrete fourier transform method and get the fourier transform
     x_real, x_im =  dft_recursive(x_real, x_im)
 
-    if (x_im < epsilon).any():
+    if (np.abs(x_im) > epsilon).any():
         print('Imaginary array is not empty')
         print(x_im)
     return x_real # throw out the imaginary part
@@ -85,13 +90,15 @@ def fft_recursive(x, epsilon=1e-10):
 
 def test_fft():
 #    func = lambda x: (2*x + np.sin(2.*np.pi*x/5.) + 3.*np.cos(2.*np.pi*x/2.)) * np.sin(2.*x)
-    func = lambda x: np.sin(x)
-    x = np.linspace(0, 20, 8)
-    xx = np.linspace(0, 20, 250)
+    func = lambda x: np.cos(x)
+    x = np.linspace(0,2* np.pi, 4)
+    xx = np.linspace(0, 2*np.pi, 250)
     y = func(x)
     yy = func(xx)
-    print(type(y))
+    print(x)
+    print(y)
     y_fft = fft_recursive(func(x))
+    print(y_fft)
     y_fft_np = np.fft.fft(func(x))
     plt.stem(y_fft, label='Own FFT')
 
@@ -99,6 +106,7 @@ def test_fft():
     plt.show()
 
     plt.stem(y_fft_np, label='Numpy FFT')
+    plt.legend()
     plt.show()
 
     plt.plot(xx, yy)
