@@ -39,37 +39,78 @@ def RungeKutta4(func, x_start, y_start, x_end, h):
     return x_solved, y_solved
 
 
-def leapfrog():
-    pass
+def leapfrog(func, x0, v0, h, N, store_vi=False):
+    """Use the Leapfrog algorithm to simulate motion"""
+    dim = len(x0)
+    x = np.zeros((N, dim))
+    v = np.zeros((2*N, dim)) # possibly store v_i and v_i+1
+    x[0], v[0] = x0, v0
+
+    # First kick
+    a = func(x0, v0)
+    print(a)
+    v[1] = v[0] + 0.5*h * a  # Not correct, use RK4 here  
+
+    for i in range(1,N):
+        #if store_vi: Don't really know what to do here
+        #    pass
+        print(v)
+        v[(2*i)+1] = v[(2*(i-1))+1] + h * a
+        x[i] = x[i-1] + h * v[(2*i)+1]
+        a = func(x[i], v[(2*i)+1])
+        print(a)
+    return x
 
 
-def grav_force(m1, m2, r, G = 6.674e-11)
-    """Compute the N-D gravitational force acting on two objects at a distance r"""
-    return G * m1 * m2 / (r*r)
+def grav_force(m1, r, G = 6.674e-11):
+    """Compute the N-D gravitational force acting on an object with mass m1
+    from an object with mass m2 located at the origin"""
+    return (G * m1 / (r*r)) * (r/np.sum(np.sqrt(r*r)))
 
 
 
 def planet_orbits():
+    h = 100
+    N = 10
     # Constants
     M_J = 9.55e-4 
     G = 6.674e-11 # m^3 kg^-1 s^-2
     yr_to_s = 31556926
+    AU_to_m = 149597870700
 
     ###
     mass_star = 1.989e30 # kg
     # Planet A
-    mass_a = M_J
+    mass_a = M_J * mass_star
     period_a = 12 * yr_to_s # s 
     radius_a = G * (mass_star + mass_a) * period_a**2 / (4*np.pi**2)
     vcirc_a = 2*np.pi*radius_a / period_a
+    print(radius_a)
+    radius_a /= AU_to_m
+    vcirc_a /= (yr_to_s*AU_to_m)
+    print(vcirc_a)
+    print(radius_a)
+    mass_star = 1
+    mass_a = M_J
     
+
     # Planet B
     #mass_b = 0.011 * M_J
-
+    print(radius_a)
     # Place it first at the copmlete right from the star
-    x_start = np.array([radius_a, 0])
+    x_start = np.array([radius_a, 1])
+    print(x_start)
+    print(x_start/np.sum(np.sqrt(x_start*x_start)))
+    input()
     v_start = np.array([0, vcirc_a])
+    orbit_func = lambda x, v: grav_force(mass_star, x)
+    x_orbit = leapfrog(orbit_func, x_start, v_start, h, N)
 
+    # Plot
+    plt.scatter(0, 0, s=30, marker='*', label='Star')
+    plt.scatter(*x_start, s=30, marker='o', label='Planet Start')
+    plt.plot(x_orbit[:,0], x_orbit[:,1], marker='o')
+    plt.show()    
 
 
 def test_ode_solvers():
