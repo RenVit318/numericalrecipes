@@ -81,7 +81,7 @@ def galaxies():
     nbins = 20
 
     lr = 0.1
-    minim_type = 'constant_step'
+    minim_type = 'line_minim'
     #####
 
     features, labels = preprocess_data(fname, plot=plot, nbins=nbins)

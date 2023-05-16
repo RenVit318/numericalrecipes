@@ -134,7 +134,7 @@ def logistic_regression(X, Y, lr=0.1, eps=1e-6, max_iter=int(1e4),
                     return theta, loss_ar[:i+1]    
 
                 step_size = line_minimization(loss_func, theta, grad)
-                theta -= step_size*grad
+                theta += step_size*grad
 
             # Use a downhill simplex to walk down the loss landscape
             case 'simplex':

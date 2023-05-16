@@ -31,7 +31,7 @@ def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=1
         d = parabola_min_analytic(a, b, c, fa, fb, fc)
         fd = func(d)
         if np.isnan(fd):
-            print(f'New point d:{d} gives fd:{fd}. Breaking function')
+            #print(f'New point d:{d} gives fd:{fd}. Breaking function')
             return np.array([a,b,c]), i+1
         # We might have a bracket if b < d < c
         if (d>b) and (d<c):
@@ -61,7 +61,6 @@ def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
     w = 2. -  (1.+np.sqrt(5))/2 # 2 - golden ratio
     a, b, c = bracket
     fa, fb, fc = func(a), func(b), func(c)
-    print(fa, fb, fc)
     for i in range(max_iter):
         # Set new point in the largest interval
         # We do this separately because the bracket propagation can just not be generalized sadly
@@ -91,9 +90,8 @@ def line_minimization(func, x_vec, step_direction, method=golden_section_search,
     """"""
     # Make a function f(x+lmda*n)
     minim_func = lambda lmda: func(x_vec + lmda * step_direction)
-    bracket_edge_guess = [0, 1]#inv_stepdirection]  # keeps the steps realatively small to combat divergence
+    bracket_edge_guess = [0, 1] # keeps the steps realatively small to combat divergence
     bracket, _ = make_bracket(minim_func, bracket_edge_guess) # make a 3-point bracket surrounding a minimum
-    print(bracket)
 
     # Use a 1-D minimization method to find the 'best' lmda
     minimum, _ = method(minim_func, bracket, target_acc=minimum_acc)
