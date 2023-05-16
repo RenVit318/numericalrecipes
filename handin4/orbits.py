@@ -5,7 +5,10 @@ from astropy.coordinates import solar_system_ephemeris
 from astropy.coordinates import get_body_barycentric_posvel
 from astropy import units as u
 from astropy import constants as const
-from integrator import LeapFrog
+from plotting import set_styles
+
+from algorithms import LeapFrog
+
 
 # TODO update gravity
 def grav_force(r, Rsun, Msun=const.M_sun.value,
@@ -58,14 +61,14 @@ def get_pos_vel(object_names,
         plt.suptitle('Initial Star and Planet Positions')
 
         plt.legend()
-        plt.savefig('figures/initial_positions.png', bbox_inches='tight')
+        plt.savefig('results/initial_positions.png', bbox_inches='tight')
 
     return planets
 
 def make_orbits(planets, N, h, plot=False):
     """"""
     if plot:
-        fig1, ax1 = plt.subplots(1,1,figsize=(6,6))
+        fig1, ax1 = plt.subplots(1,1,figsize=(10,10))
         fig2, ax2 = plt.subplots(1,1,figsize=(6,4))
         i = 1
 
@@ -92,13 +95,17 @@ def make_orbits(planets, N, h, plot=False):
         ax2.set_title('Planet z-positions over 200 Years')
 
         fig1.legend()
-        fig1.savefig('figures/orbits.png', bbox_inches='tight')
-        fig2.savefig('figures/zplane_png', bbox_inches='tight')
+        fig1.savefig('results/orbits.png', bbox_inches='tight')
+        ax1.set_xlim(-2, 2)
+        ax1.set_ylim(-2, 2)
+        fig1.savefig('results/orbits_zoom.png', bbox_inches='tight')
+        fig2.savefig('results/zplane_png', bbox_inches='tight')
 
     plt.show()
        
 
 def solar_system_sim():
+    set_styles()
     object_names = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune']
     #object_names = ['sun', 'earth']
     h = 0.5

@@ -1,5 +1,96 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from functions.minimization import downhill_simplex
+
+
+def parabola_min_analytic(a, b, c, fa, fb, fc):
+    """Analytically computes the x-value of the minimum of a parabola
+    that crosses a, b and c
+    """
+    top = (b-a)**2 * (fb-fc)  - (b-c)**2 * (fb-fa)
+    bot = (b-a) * (fb-fc) - (b-c) * (fb-fa)
+    return b - 0.5*(top/bot)
+
+def make_bracket(func, bracket, w=(1.+np.sqrt(5))/2, dist_thresh=100, max_iter=10000):
+    """Given two points [a, b], attempts to return a bracket triplet
+    [a, b, c] such that f(a) > f(b) and f(c) > f(b).
+    Note we only compute f(d) once for each point to save computing time"""
+    a, b = bracket
+    fa, fb = func(a), func(b)
+    direction = 1 # Indicates if we're moving right or left
+    if fa < fb:
+        # Switch the two points
+        a, b = b, a
+        fa, fb = fb, fa
+        direction = 1 # move to the left
+
+    c = b + direction * (b - a) *w
+    fc = func(c)
+    
+    for i in range(max_iter):
+        if fc > fb:
+            return np.array([a, b, c])  , i+1
+        d = parabola_min_analytic(a, b, c, fa, fb, fc)
+        fd = func(d)
+        if np.isnan(fd):
+            print(f'New point d:{d} gives fd:{fd}. Breaking function')
+            return np.array([a,b,c]), i+1
+        # We might have a bracket if b < d < c
+        if (d>b) and (d<c):
+            if fd > fb:
+                return np.array([a, b, d]), i+1
+            elif fd < fc:
+                return np.array([b, d, c]), i+1
+            # Else we don't want this d
+            #print('no parabola, in between b and c')
+            d = c + direction * (c - b) * w
+        elif (d-b) > 100*(c-b): # d too far away, don't trust it
+            #print('no parabola, too far away')
+            d = c + direction * (c - b) * w
+        elif d < b:
+            pass#print('d smaller than b')
+
+        # we shifted but didn't find a bracket. Go again
+        a, b, c = b, c, d
+        fa, fb, fc = fb, fc, fd
+
+    print('WARNING: Max. iterations exceeded. No bracket was found. Returning last values')
+    return np.array([a, b, c]), i+1
+
+def golden_section_search(func, bracket, target_acc=1e-5, max_iter=int(1e5)):
+    """Once we have a start 3-point bracket surrounding a minima, this function iteratively
+    tightens the bracket to search of the enclosed minima using golden section search."""
+    w = 2. -  (1.+np.sqrt(5))/2 # 2 - golden ratio
+    a, b, c = bracket
+    fa, fb, fc = func(a), func(b), func(c)
+    print(fa, fb, fc)
+    for i in range(max_iter):
+        # Set new point in the largest interval
+        # We do this separately because the bracket propagation can just not be generalized sadly
+        if np.abs(c-b) > np.abs(b-a): # we tighten towards the right
+            d = b + (c-b)*w
+            fd = func(d)
+            if fd < fb: # min is in between b and c
+                a, b, c = b, d, c
+                fa, fb, fc = fb, fd, fc
+            else: # min is in between a and d
+                a, b, c = a, b, d 
+                fa, fb, fc = fa, fb, fd
+        else: # we tighten towards the left
+            d = b + (a-b)*w
+            fd = func(d)
+            if fd < fb: # min is in between a and b
+                a, b, c = a, d, b
+                fa, fb, fc = fa, fd, fb
+            else: # min is in between d and c
+                a, b, c = d, b, c
+                fa, fb, fc = fd, fb, fc            
+        
+        if np.abs(c-a) < target_acc:
+            return [b,d][np.argmin([fb, fd])], i+1 # return the x point corresponding to the lowest f(x)
+
+    print("Maximum Number of Iterations Reached")
+    return b, i+1
 
 def load_data(dpath='dataset_LATTE.txt'):
     return np.genfromtxt(dpath)
@@ -26,25 +117,64 @@ def logistic_loss(X, Y, theta, hypothesis_func=logistic_func,
     return loss 
 
 def logistic_regression(X, Y, lr=0.1, eps=1e-6, max_iter=int(1e4),
-                        loss_func=logistic_loss):
+                        cost_func=logistic_loss,
+                        minim_type='constant_step'):
     """Perform logistic regression on features X and labels Y
     X should have shape (m, n); Y should have shape (m)"""
     theta = np.ones(X.shape[1])
-    loss = np.inf
-    
+    loss_ar = np.zeros(max_iter)
+    # Define a function where we only have to feed in theta, because X, Y are constant
+    loss_func = lambda theta, return_gradient=False: cost_func(X, Y, theta, return_gradient=return_gradient)
+
     for i in range(max_iter):
-        loss, grad = loss_func(X, Y, theta, return_gradient=True)
-        #print(f'Iteration {i}, loss = {loss}')
-        if np.abs(np.max(grad)) < eps:
-            print('Gradient reached epsilon threshold')
-            print(f'Final Loss = {loss}')
-            return theta        
-        #print('grad ', grad)
-        #print('theta ', theta)
-        theta -= lr * grad
-        
+        match minim_type:
+            # Use a constant learning rate to minimize
+            case 'constant_step': 
+                loss, grad = loss_func(theta, return_gradient=True)
+                loss_ar[i] = loss
+                if np.abs(np.max(grad)) < eps:
+                    print('Gradient reached epsilon threshold')
+                    print(f'Final Loss = {loss}')
+                    return theta, loss_ar[:i+1]     
+                theta -= lr * grad
+    
+            # Step along -grad, but use line minimization to find the step size
+            case 'line_minim':
+                loss, grad = loss_func(theta, return_gradient=True)
+                loss_ar[i] = loss  
+                if np.abs(np.max(grad)) < eps:   
+                    print('Gradient reached epsilon threshold')
+                    print(f'Final Loss = {loss}')
+                    return theta, loss[:i+1]    
+
+                step_size = line_minimization(loss_func, theta, grad)
+                print(step_size)
+                input()
+                theta -= step_size*grad
+
+            # Use a downhill simplex to walk down the loss landscape
+            case 'simplex':
+                print(theta)
+                theta, _ = downhill_simplex(loss_func, theta, eval_separate=True)
+                return theta, None
     print('Maximum number of iterations reached.')
-    return theta
+    return theta, loss_ar
+
+
+# LINE MINIMIZATION
+def line_minimization(func, x_vec, step_direction, method=golden_section_search, minimum_acc=1e-5):
+    """"""
+    # Make a function f(x+lmda*n)
+    minim_func = lambda lmda: func(x_vec + lmda * step_direction)
+    bracket_edge_guess = [0, 1]#inv_stepdirection]  # keeps the steps realatively small to combat divergence
+    bracket, _ = make_bracket(minim_func, bracket_edge_guess) # make a 3-point bracket surrounding a minimum
+    print(bracket)
+
+    # Use a 1-D minimization method to find the 'best' lmda
+    minimum, _ = method(minim_func, bracket, target_acc=minimum_acc)
+    return minimum
+
+
 
 def make_confusion_matrix(labels, pred):
     """"""
@@ -78,7 +208,7 @@ def ida(test):
     labels = test[:,2]
     m = len(X)
     n = 2
-    lr = 1e-3
+    lr = 0.1
     print(f'{len(X)} Samples in Total\n{len(X[labels==1])} Bulge Stars')
 
     # Shift features to be ~N(0, 1)
@@ -92,7 +222,7 @@ def ida(test):
         std = np.std(features[:,j])
         features[:,j] = (features[:,j] - mean)/std
         
-    params = logistic_regression(features, labels, lr=lr)
+    params, _ = logistic_regression(features, labels, lr=lr, minim_type='constant_step')
     print(f'Parameters: {params}')  
     logi = logistic_func(features, params)
     predictions = np.zeros(len(logi))

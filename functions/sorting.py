@@ -4,6 +4,8 @@
 # 
 #################
 
+import numpy as np
+
 def sort_subarrays(a1, a2, k1, k2):
     """Takes two subarrays 1,2 with indices a1, a2 and values k1, k2 and combines these
     into array with indices a such that the k are sorted in ascending order"""
