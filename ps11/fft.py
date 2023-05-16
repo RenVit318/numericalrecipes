@@ -38,9 +38,9 @@ def dft_recursive(x_real, x_im):
     print(theta, alpha, beta)
     
     for k in range(N//2):
-        print(k)
         t_real, t_im = x_real[k], x_im[k]
         k2 = k + N//2 
+        print(k, k2)
         # Compute the product of WNk and Hk        
         prod_real = x_real[k2]*cos_k - x_im[k2]*sin_k
         prod_im = x_real[k2]*sin_k + x_im[k2]*cos_k
@@ -54,8 +54,10 @@ def dft_recursive(x_real, x_im):
         # Update cos_k and sin_k
         # This does the calculation one time too often, does it matter?
 
-        cos_k = cos_k - alpha*cos_k - beta*sin_k
-        sin_k = sin_k - alpha*sin_k + beta*cos_k
+        cos_k_new = cos_k - alpha*cos_k - beta*sin_k
+        sin_k_new = sin_k - alpha*sin_k + beta*cos_k
+        cos_k, sin_k = cos_k_new, sin_k_new
+        print(cos_k, sin_k)
         print(x_real)
     return x_real, x_im
         
@@ -81,7 +83,7 @@ def fft_recursive(x, epsilon=1e-10):
     x_im = np.zeros(N, dtype=np.float64)
     # Recursively call the discrete fourier transform method and get the fourier transform
     x_real, x_im =  dft_recursive(x_real, x_im)
-
+    print(x_im)
     if (np.abs(x_im) > epsilon).any():
         print('Imaginary array is not empty')
         print(x_im)
@@ -90,9 +92,11 @@ def fft_recursive(x, epsilon=1e-10):
 
 def test_fft():
 #    func = lambda x: (2*x + np.sin(2.*np.pi*x/5.) + 3.*np.cos(2.*np.pi*x/2.)) * np.sin(2.*x)
-    func = lambda x: np.cos(x)
-    x = np.linspace(0,2* np.pi, 4)
-    xx = np.linspace(0, 2*np.pi, 250)
+#    func = lambda x: np.sin(x)
+    func = lambda x: np.exp(-x*x)
+    N = 256
+    x = np.linspace(-np.pi, np.pi, N)
+    xx = np.linspace(-np.pi, np.pi, 250)
     y = func(x)
     yy = func(xx)
     print(x)
@@ -100,7 +104,8 @@ def test_fft():
     y_fft = fft_recursive(func(x))
     print(y_fft)
     y_fft_np = np.fft.fft(func(x))
-    plt.stem(y_fft, label='Own FFT')
+    print(y_fft_np)
+    plt.stem(np.append(y_fft[:N//2], y_fft[N//2:]), label='Own FFT')
 
     plt.legend()
     plt.show()
