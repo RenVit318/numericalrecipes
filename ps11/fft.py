@@ -18,32 +18,41 @@ def bit_reversal(x):
     return reversed_idxs
 
 
-def dft_recursive(x_real, x_im):
+def dft_recursive(x_real, x_im, inverse=False):
     """Recursively apply the discrete fourier transform following
     the Cooley-Tukey algorithm. We deal with complex numbers using
     two arrays and trigonometric recurrence for efficiency"""
+    if inverse:
+        pre_fac = -1
+    else:
+        pre_fac = 1 
+    # Inverted FT has a '-' sign in the exponent. We add it into the W_N^k
+
     N = len(x_real)
+    
     if N > 2:
         # Split the array into even and odds, and apply this algorithm to them    
         x_real[::2], x_im[::2] = dft_recursive(x_real[::2], x_im[::2])
         x_real[1::2], x_im[1::2] = dft_recursive(x_real[1::2], x_im[1::2])
-    print('starting an iteration')
-    print(x_real, x_im)
+    print('N',N)
+    #print('starting an iteration')
+    #print(x_real, x_im)
     # Define variables for trigonometric recurrence
     theta = 2.*np.pi / N
     alpha = 2.*(np.sin(theta/2.)**2)   
     beta = np.sin(theta)
     cos_k = 1 # the first k is zero  
     sin_k = 0 
-    print(theta, alpha, beta)
+    #print(theta, alpha, beta)
     
     for k in range(N//2):
+        print('k', k)
         t_real, t_im = x_real[k], x_im[k]
         k2 = k + N//2 
-        print(k, k2)
+        #print(k, k2)
         # Compute the product of WNk and Hk        
-        prod_real = x_real[k2]*cos_k - x_im[k2]*sin_k
-        prod_im = x_real[k2]*sin_k + x_im[k2]*cos_k
+        prod_real = pre_fac * (x_real[k2]*cos_k - x_im[k2]*sin_k)
+        prod_im = pre_fac * (x_real[k2]*sin_k + x_im[k2]*cos_k)
 
         # Combine with the above product
         x_real[k] = t_real + prod_real
@@ -57,21 +66,20 @@ def dft_recursive(x_real, x_im):
         cos_k_new = cos_k - alpha*cos_k - beta*sin_k
         sin_k_new = sin_k - alpha*sin_k + beta*cos_k
         cos_k, sin_k = cos_k_new, sin_k_new
-        print(cos_k, sin_k)
-        print(x_real)
+        #print(cos_k, sin_k)
+        #print(x_real)
     return x_real, x_im
         
 
-def fft_recursive(x, epsilon=1e-10):
+def fft_recursive(x, inverse=False, epsilon=1e-10):
     """Applies the Cooley-Tukey algorithm to apply the fast-fourier
     transform to x using recursive function calls"""
     N = len(x)
-    order = np.log2(N)
-    
     # Check if N is an order of 2
-    if int(order) != int(np.ceil(order)):
+    if (N%2) > 0:
         raise ValueError(f'Length of array {N} is not an order of 2. Change the array')
-    order = int(order)
+
+    order = int(np.log2(N))
 
     # Start by bit-reversing x to get the 1-el FFT solutions. Could do this faster?
     x_real = x
@@ -82,11 +90,14 @@ def fft_recursive(x, epsilon=1e-10):
     
     x_im = np.zeros(N, dtype=np.float64)
     # Recursively call the discrete fourier transform method and get the fourier transform
-    x_real, x_im =  dft_recursive(x_real, x_im)
+    x_real, x_im =  dft_recursive(x_real, x_im, inverse)
     print(x_im)
     if (np.abs(x_im) > epsilon).any():
         print('Imaginary array is not empty')
         print(x_im)
+
+    if inverse:
+        x_real /= N 
     return x_real # throw out the imaginary part
 
 
@@ -102,20 +113,23 @@ def test_fft():
     print(x)
     print(y)
     y_fft = fft_recursive(func(x))
+    y_recon = fft_recursive(y_fft, inverse=True)
+
     print(y_fft)
     y_fft_np = np.fft.fft(func(x))
     print(y_fft_np)
-    plt.stem(np.append(y_fft[:N//2], y_fft[N//2:]), label='Own FFT')
+    plt.stem(y_fft, label='Own FFT')
 
     plt.legend()
     plt.show()
 
-    plt.stem(y_fft_np, label='Numpy FFT')
+    plt.stem(np.append(y_fft_np[N//2:], y_fft_np[:N//2]), label='Numpy FFT')
     plt.legend()
     plt.show()
 
     plt.plot(xx, yy)
-    plt.scatter(x, y, c='black')
+    plt.plot(x, y_recon, marker='o')
+    #plt.scatter(x, y, c='black')
     plt.show()
 
 
