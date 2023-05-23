@@ -7,7 +7,7 @@ from astropy import units as u
 from astropy import constants as const
 from plotting import set_styles
 
-from algorithms import LeapFrog
+from algorithms import LeapFrog, RungeKutta4
 
 
 # TODO update gravity
@@ -43,7 +43,8 @@ def get_pos_vel(object_names,
            
         # Feed r_sun into the grav_force function to get the correct coordinates
         acc_func = lambda x, v: grav_force(x, r_sun)
-        planets[obj] = LeapFrog(x0, v0, acc_func)
+        #planets[obj] = LeapFrog(x0, v0, acc_func)
+        planets[obj] = RungeKutta4(x0, v0, acc_func)
         
         if plot:
             if obj == 'sun':

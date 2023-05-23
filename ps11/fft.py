@@ -23,9 +23,9 @@ def dft_recursive(x_real, x_im, inverse=False):
     the Cooley-Tukey algorithm. We deal with complex numbers using
     two arrays and trigonometric recurrence for efficiency"""
     if inverse:
-        pre_fac = -1
+        pre_fac = 1.
     else:
-        pre_fac = 1 
+        pre_fac = -1. 
     # Inverted FT has a '-' sign in the exponent. We add it into the W_N^k
 
     N = len(x_real)
@@ -41,19 +41,19 @@ def dft_recursive(x_real, x_im, inverse=False):
     theta = 2.*np.pi / N
     alpha = 2.*(np.sin(theta/2.)**2)   
     beta = np.sin(theta)
-    cos_k = 1 # the first k is zero  
-    sin_k = 0 
-
+    cos_k = 1. # the first k is zero  
+    sin_k = 0. 
     
     for k in range(N//2):
-        t_real, t_im = x_real[k], x_im[k]
+        t_real, t_im = x_real[k], x_im[k] # This makes a new variable in memory
         k2 = k + N//2 # index of the odd element
 
         # Compute the product of WNk and Hk 
-        prod_real = pre_fac * (x_real[k2]*cos_k - x_im[k2]*sin_k)
-        prod_im = pre_fac * (x_real[k2]*sin_k + x_im[k2]*cos_k)
+        # Only pre_fac in front of sin because cos(-x) = cos(x) ; sin(-x) = sin(x)
+        prod_real = x_real[k2]*cos_k - pre_fac*x_im[k2]*sin_k
+        prod_im =   pre_fac*x_real[k2]*sin_k + x_im[k2]*cos_k
 
-        # Combine with the above product (+ for even, - for odd
+        # Combine with the above product (+ for even, - for odd)
         x_real[k] = t_real + prod_real
         x_real[k2] = t_real - prod_real
         x_im[k] = t_im + prod_im
@@ -86,6 +86,7 @@ def fft_recursive(x, inverse=False, epsilon=1e-10):
     # Check if the imaginary array is empty
     if (np.abs(x_im) > epsilon).any():
         print('Imaginary array is not empty')
+        print(x_im)
 
     if inverse:
         x_real /= N
@@ -97,34 +98,37 @@ def test_fft():
     func = lambda x: (2*x + np.sin(2.*np.pi*x/5.) + 3.*np.cos(2.*np.pi*x/2.)) * np.sin(2.*x)
     #func = lambda x: np.sin(x)
     #func = lambda x: np.exp(-x*x)
-    N = 32
-    x = np.linspace(-np.pi, np.pi, N)
-    xx = np.linspace(-np.pi, np.pi, 250)
+    N = 128
+    x = np.linspace(0,20, N)
+    xx = np.linspace(0, 20, 250)
     y = func(x)
     yy = func(xx)
 
     y_fft = fft_recursive(func(x))
     y_recon = fft_recursive(y_fft, inverse=True)
-
+    #y_recon /= N
     plt.stem(y_fft, label='Own FFT')
     plt.legend()
     plt.show()
 
-    y_fft_np = np.fft.fft(func(x))
-    print(np.allclose(y_fft, y_fft_np))
-    y_recon = fft_recursive(y_fft_np, inverse=True)
+    #y_fft_np = np.fft.fft(func(x))
+    #y_recon_np = np.fft.ifft(y_fft      )
+    #print(np.allclose(y_fft, y_fft_np))
+    #print(y_fft.shape, y_fft_np.shape)    
+    #y_recon = fft_recursive(y_fft_np, inverse=True)
     
-    plt.stem(y_fft_np, label="Numpy FFT")
+    #plt.stem(y_fft_np, label="Numpy FFT")
     #plt.stem(np.append(y_fft_np[N//2:], y_fft_np[:N//2]), label='Numpy FFT')
-    plt.legend()
-    plt.show()
+    ##plt.legend()
+    #plt.show()
 
     plt.plot(xx, yy)
     plt.plot(x, y_recon, marker='o')
-    plt.scatter(x, y, c='black')
+    #plt.plot(x, y_recon_np)
+    #plt.scatter(x, y, c='black')
     plt.show()
     
-    plt.plot(x, func(x)/y_recon)
+    #plt.plot(x, func(x)/y_recon)
     plt.show()
 
 
