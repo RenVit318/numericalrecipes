@@ -182,25 +182,17 @@ def fft(x, inverse=False):
     x = np.array(x, dtype=np.cdouble)
     x_fft = dft_recursive(x, inverse)
 
+    if inverse:
+        x_fft /= N
+
     return x_fft
-
-
-def ifft(x):
-    """Apply the inverse FFT algorithm using the recursive Cooley-Tukey algorithm (see fft).
-    This function introduced a '-' sign in the exponent and divides the result by N according
-    to the lecture notes. This function mostly exists because it looks nicer."""
-    x_fft = fft(x, inverse=True)
-    return x_fft/len(x_fft)
 
 
 def fft_nd(x, inverse):
     """Apply the Fourier transform to mulitdimensional data. This can easily be done by performing
     the FFT algorithm along each axis separately consecutively"""
     dim = len(x.shape)
-    if inverse:
-        func = ifft
-    else:
-        func = fft
+    func = lambda x: fft(x, inverse)
     # Start with dim 0 and work up to the highest dimension
     for i in range(dim):
         x = np.apply_along_axis(func1d=func, axis=i, arr=x)

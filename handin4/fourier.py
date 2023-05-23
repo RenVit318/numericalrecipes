@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from plotting import set_styles
 from cic import get_densities
-from algorithms import fft, ifft, fft_nd
+from algorithms import fft, fft_nd
 
 def plot_at_zslices(data, savename, cb_label,   
                     z_slices=[4.5, 9.5, 11.5, 14.5]):
@@ -28,7 +28,6 @@ def plot_at_zslices(data, savename, cb_label,
         ax.set_xlabel(r'$X$')
     plt.savefig(f'results/{savename}.png', bbox_inches='tight')
 
-
 def compute_forces():
     # Make density grid and compute the density contrasts
     mean_rho = 1024/(16**3)
@@ -38,21 +37,16 @@ def compute_forces():
     # Plot slices at various z
     plot_at_zslices(delta, 'density_contrast_slices', 'Density Contrast')
 
-    
     # Apply FFT to \delta to get k^2 \Phi~
     k = 1
     phi_fft = fft(delta) / (k**2)
-    #print(phi_fft)
     potential = fft_nd(phi_fft, True)
-
 
     # Plot the log of the FFT potential
     plot_at_zslices(np.log10(np.abs(phi_fft)), 'fft_potential', r'$\log_{10}(|\tilde{\Phi}|$')
     # Plot the potential
     plot_at_zslices(np.real(potential), 'potential_slices', 'Potential')
-    #plot_at_zslices(np.real(potential)/delta, 'test', 'test')
         
-
 def main():
     set_styles()
     compute_forces()
