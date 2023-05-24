@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.8)  23 MAY 2023 17:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.8)  24 MAY 2023 11:12
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -152,7 +152,8 @@ File: l3backend-pdftex.def 2022-01-12 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count279
 \l__pdf_internal_box=\box54
 )
-No file main.aux.
+(./main.aux (./latex/orbits.aux) (./latex/fourier.aux)
+(./latex/classification.aux))
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 9.
@@ -169,6 +170,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 9.
 LaTeX Font Info:    ... okay on input line 9.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 9.
 LaTeX Font Info:    ... okay on input line 9.
+
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count280
@@ -200,47 +202,85 @@ consecutive:
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 \openout2 = `latex/orbits.aux'.
 
- (./latex/orbits.tex)
+ (./latex/orbits.tex
+<results/initial_positions.png, id=14, 850.6179pt x 423.5022pt>
+File: results/initial_positions.png Graphic file (type png)
+<use results/initial_positions.png>
+Package pdftex.def Info: results/initial_positions.png  used on input line 15.
+(pdftex.def)             Requested size: 345.0pt x 171.76945pt.
+<results/orbits_lf.png, id=16, 1008.1665pt x 427.1157pt>
+File: results/orbits_lf.png Graphic file (type png)
+<use results/orbits_lf.png>
+Package pdftex.def Info: results/orbits_lf.png  used on input line 29.
+(pdftex.def)             Requested size: 345.0pt x 146.1559pt.
+<results/zplane.png, id=17, 738.5994pt x 399.6531pt>
+File: results/zplane.png Graphic file (type png)
+<use results/zplane.png>
+Package pdftex.def Info: results/zplane.png  used on input line 30.
+(pdftex.def)             Requested size: 207.0021pt x 112.00577pt.
+
 [2
 
-]
+ <./results/initial_positions.png>]
+<results/orbits_rk4.png, id=30, 1008.1665pt x 427.1157pt>
+File: results/orbits_rk4.png Graphic file (type png)
+<use results/orbits_rk4.png>
+Package pdftex.def Info: results/orbits_rk4.png  used on input line 43.
+(pdftex.def)             Requested size: 345.0pt x 146.1559pt.
+ [3 <./results/orbits_lf.png> <./results/zplane.png>]
+<results/rk4_lf_diff.png, id=36, 744.381pt x 399.6531pt>
+File: results/rk4_lf_diff.png Graphic file (type png)
+<use results/rk4_lf_diff.png>
+Package pdftex.def Info: results/rk4_lf_diff.png  used on input line 54.
+(pdftex.def)             Requested size: 207.0021pt x 111.13373pt.
+) [4 <./results/orbits_rk4.png> <./results/rk4_lf_diff.png>]
 \openout2 = `latex/fourier.aux'.
 
- (./latex/fourier.tex) [3
+
+(./latex/fourier.tex) [5
 
 
 
 ]
 \openout2 = `latex/classification.aux'.
 
- (./latex/classification.tex) [4
+ (./latex/classification.tex) [6
 
 
 
 ] (./main.aux
-(./latex/orbits.aux) (./latex/fourier.aux) (./latex/classification.aux)) ) 
+(./latex/orbits.aux) (./latex/fourier.aux) (./latex/classification.aux))
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ ) 
 Here is how much of TeX's memory you used:
- 3953 strings out of 480247
- 58486 string characters out of 5896152
+ 4013 strings out of 480247
+ 59755 string characters out of 5896152
  610961 words of memory out of 5000000
- 21870 multiletter control sequences out of 15000+600000
- 474517 words of font info for 46 fonts, out of 8000000 for 9000
+ 21913 multiletter control sequences out of 15000+600000
+ 475792 words of font info for 51 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,6n,65p,259b,1310s stack positions out of 5000i,500n,10000p,200000b,80000s
- </ho
-me/rens/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm0800.600pk></usr
-/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share
-/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></usr/share/texliv
-e/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf
--dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/f
-onts/type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/publ
-ic/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmr9.pfb>
-Output written on main.pdf (4 pages, 102644 bytes).
+ 60i,6n,65p,836b,1310s stack positions out of 5000i,500n,10000p,200000b,80000s
+ </home/rens/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm0800.600p
+k></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></us
+r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texli
+ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/ams
+fonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pf
+b></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
+r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texli
+ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on main.pdf (6 pages, 686212 bytes).
 PDF statistics:
- 62 PDF objects out of 1000 (max. 8388607)
- 38 compressed objects within 1 object stream
+ 114 PDF objects out of 1000 (max. 8388607)
+ 64 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 26 words of extra memory for PDF output out of 10000 (max. 10000000)
 

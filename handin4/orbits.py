@@ -28,7 +28,7 @@ def get_pos_vel(object_names,
     planets = {} # Dictionary in which we save our planet objects (and the sun)
 
     if plot:
-        fig, [ax1, ax2] = plt.subplots(1,2,figsize=(8,4), tight_layout=True)
+        fig, [ax1, ax2] = plt.subplots(1,2,figsize=(12,6), tight_layout=True)
     
     for obj in object_names:
         # get the astropy data
@@ -71,8 +71,8 @@ def make_orbits(planets, N, h, plot=False,
     """"""
     if plot:
         fig1, axs1 = plt.subplots(1,2,figsize=(15,6))
-        fig2, ax2 = plt.subplots(1,1,figsize=(8,6))
-        fig3, ax3 = plt.subplots(1,1,figsize=(8,6))
+        fig2, ax2 = plt.subplots(1,1,figsize=(12,6))
+        fig3, ax3 = plt.subplots(1,1,figsize=(12,6))
         fig4, axs4 = plt.subplots(1,2,figsize=(15,6))
     i = 1
 
@@ -103,7 +103,7 @@ def make_orbits(planets, N, h, plot=False,
             RK4.simulate_motion(N, h)
             
             # Plot the difference in x-positions between RK4 and LF
-            ax3.plot(h*np.arange(obj.x.shape[0]), np.abs(RK4.x[:,0] - obj.x[:,0]), c=f'C{i}')  
+            ax3.plot(h*np.arange(obj.x.shape[0]), (RK4.x[:,0] - obj.x[:,0]), c=f'C{i}')  
          
             # Plot the orbits
             axs4[0].scatter(RK4.x0[0], RK4.x0[1], c=f'C{i}', label=name.capitalize())
@@ -133,11 +133,11 @@ def make_orbits(planets, N, h, plot=False,
         ax2.set_xlabel(r'Time in Days')
         ax2.set_ylabel(r'$Z$ [AU]')
         ax2.set_title('Planet z-positions over 200 Years with LeapFrog')
-        fig2.savefig('results/zplane_png', bbox_inches='tight')
+        fig2.savefig('results/zplane.png', bbox_inches='tight')
 
         # FIGURE 3
         ax3.set_xlabel(r'Time in Days')
-        ax3.set_ylabel(r'$|X_{\mathrm{RK4}} - X_{\mathrm{LF}}|$ [AU]') 
+        ax3.set_ylabel(r'$X_{\mathrm{RK4}} - X_{\mathrm{LF}}$ [AU]') 
         #ax3.set_yscale('log')
         ax3.set_title('Positional Differences')
         fig3.savefig('results/rk4_lf_diff.png', bbox_inches='tight')
@@ -157,7 +157,6 @@ def make_orbits(planets, N, h, plot=False,
         fig4.legend(loc='right')
         fig4.savefig('results/orbits_rk4.png', bbox_inches='tight')
 
-    plt.show()
        
 
 def solar_system_sim():
@@ -165,8 +164,8 @@ def solar_system_sim():
     object_names = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune']
 
     h = 0.5
-    N = int((365.25 * 50)/h) # 200yrs in total
-    print(N)
+    N = int((365.25 * 200)/h) # 200yrs in total
+    print('N Steps = ', N)
 
     plot = True
     compare_to_rk4 = True
