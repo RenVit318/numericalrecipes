@@ -255,5 +255,30 @@ def logistic_regression(X, Y, lr=0.1, eps=1e-6, max_iter=int(1e4),
     print('Maximum number of iterations reached.')
     return theta, loss_ar
 
+# CONFUSION MAT. AND F1 SCORES
+def make_confusion_matrix(labels, pred):
+    """"""
+    n_features = int(np.max(labels) + 1)
+    mat = np.zeros((n_features, n_features))
+    for i in range(n_features):
+        true = np.where(labels == i)[0]
+        for j in range(n_features): 
+            if i == j:
+                mat[i][i] = len(np.where(pred[true] == i)[0])
+            else:
+                mat[i][j] = len(np.where(pred[true] == j)[0])
+
+    return mat
+        
+def compute_f1_score(mat):
+    """Compute the F1 score for a 2D confusion matrix. It is defined as
+        F1 = 2 x (precision x recall)/(precision+recall)
+       with
+        precision = TP/(TP+FP)
+        recall = TP/(TP+FN)"""
+    precision = mat[1][1] / (mat[1][1] + mat[0][1])
+    recall = mat[1][1] / (mat[1][1] + mat[1][0])
+    return 2. * (precision * recall) / (precision + recall)
+
 
 

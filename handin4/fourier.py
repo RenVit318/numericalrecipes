@@ -12,7 +12,7 @@ def plot_at_zslices(data, savename, cb_label, suptitle,
     for ax, z in zip(axs.flatten(), z_slices):
         # Integer z appear at the edges, but in our array we have the centers
         # so z=4.5 occurs at index 4
-        im = ax.imshow(data[:,:,int(z)], cmap='jet')
+        im = ax.imshow(data[:,:,int(z)], cmap='jet', origin='lower')
         ax.set_title(rf'$Z$ = {z}')
         ax.grid(False)
     # Setup a colorbar for all

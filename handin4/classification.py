@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from plotting import set_styles, hist
-from algorithms import logistic_regression
+from algorithms import logistic_func, logistic_regression, make_confusion_matrix, compute_f1_score
 
 def preprocess_data(fname, plot=False, nbins=None):
     data = np.genfromtxt(fname)
@@ -41,6 +41,7 @@ def classify(features, labels, lr, minim_type,
     names = [r'$\kappa_{\mathrm{co}}$', 'Color', 'Extended', 'Emission Flux']
     snames = ['kappa', 'color', 'extended', 'emission_flux'] # names for the savefiles
     fig1, ax1 = plt.subplots(1,1, figsize=(9,4))
+    table_txt = "" # Fill out for the confusion matrix table
 
     for i in range(features.shape[1]):
         for j in range(i+1, features.shape[1]):  
@@ -48,6 +49,13 @@ def classify(features, labels, lr, minim_type,
             # Add in the bias
             feats = np.append(feats, np.ones(feats.shape[0])[:, np.newaxis], axis=1)
             params, loss = logistic_regression(feats, labels, lr=lr, minim_type=minim_type)
+
+            # Make the confusion matrix and compute F1
+            logi = logistic_func(feats, params)
+            predictions = np.zeros(len(logi))
+            predictions[logi>=0.5] = 1 # label = 1 if logi > 0.5 otherwise label = 0
+            conf_mat = make_confusion_matrix(labels, predictions)   
+            f1 = compute_f1_score(conf_mat)
 
             # Plot loss curve
             ax1.step(np.arange(loss.shape[0]), loss, label=f'{names[i]} + \n{names[j]}')
@@ -66,6 +74,11 @@ def classify(features, labels, lr, minim_type,
             ax2.set_ylim(np.percentile(feats[:,1], p), np.percentile(feats[:,1], 100-p))
             fig2.savefig(f'results/2d_fit_{minim_type}_{snames[i]}_{snames[j]}.png', bbox_inches='tight')
 
+            # Add text for the table. Format is
+            # Feats. TN TP FN FP F1
+            conf_mat = np.array(conf_mat, dtype=int)
+            table_txt += f'{names[i]} + {names[j]} & {conf_mat[0][0]} & {conf_mat[1][1]} & {conf_mat[1][0]} & {conf_mat[0][1]} & {f1} \\\\\n'
+
     ax1.set_xlabel('Iteration Number')
     ax1.set_ylabel('Loss')
     ax1.set_title('Loss over Time for 2D Fits')
@@ -77,6 +90,13 @@ def classify(features, labels, lr, minim_type,
     ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     fig1.savefig(f'results/2d_fit_losses_{minim_type}')
+
+    # write to file
+    with open(f'results/confmat_tab_{minim_type}.txt', 'w') as f:
+        table_txt = table_txt[:-4]
+        f.write(table_txt)
+        f.close()
+
 
 def galaxies():    
     set_styles()
