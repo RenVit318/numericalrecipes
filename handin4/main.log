@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.8)  24 MAY 2023 11:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2023.3.8)  25 MAY 2023 13:36
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -203,84 +203,202 @@ consecutive:
 \openout2 = `latex/orbits.aux'.
 
  (./latex/orbits.tex
-<results/initial_positions.png, id=14, 850.6179pt x 423.5022pt>
-File: results/initial_positions.png Graphic file (type png)
-<use results/initial_positions.png>
-Package pdftex.def Info: results/initial_positions.png  used on input line 15.
-(pdftex.def)             Requested size: 345.0pt x 171.76945pt.
-<results/orbits_lf.png, id=16, 1008.1665pt x 427.1157pt>
-File: results/orbits_lf.png Graphic file (type png)
-<use results/orbits_lf.png>
-Package pdftex.def Info: results/orbits_lf.png  used on input line 29.
-(pdftex.def)             Requested size: 345.0pt x 146.1559pt.
-<results/zplane.png, id=17, 738.5994pt x 399.6531pt>
-File: results/zplane.png Graphic file (type png)
-<use results/zplane.png>
-Package pdftex.def Info: results/zplane.png  used on input line 30.
-(pdftex.def)             Requested size: 207.0021pt x 112.00577pt.
-
-[2
-
- <./results/initial_positions.png>]
-<results/orbits_rk4.png, id=30, 1008.1665pt x 427.1157pt>
-File: results/orbits_rk4.png Graphic file (type png)
-<use results/orbits_rk4.png>
-Package pdftex.def Info: results/orbits_rk4.png  used on input line 43.
-(pdftex.def)             Requested size: 345.0pt x 146.1559pt.
- [3 <./results/orbits_lf.png> <./results/zplane.png>]
-<results/rk4_lf_diff.png, id=36, 744.381pt x 399.6531pt>
-File: results/rk4_lf_diff.png Graphic file (type png)
-<use results/rk4_lf_diff.png>
-Package pdftex.def Info: results/rk4_lf_diff.png  used on input line 54.
-(pdftex.def)             Requested size: 207.0021pt x 111.13373pt.
-) [4 <./results/orbits_rk4.png> <./results/rk4_lf_diff.png>]
-\openout2 = `latex/fourier.aux'.
-
-
-(./latex/fourier.tex) [5
-
-
+(./orbits.py
+LaTeX Font Info:    Trying to load font information for OMS+cmr on input line 2
+7.
+ (/usr/share/texlive/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 2019/12/16 v2.5j Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 27.
+ [2
 
 ]
+[3] [4])
+<results/initial_positions.png, id=25, 850.6179pt x 423.5022pt>
+File: results/initial_positions.png Graphic file (type png)
+<use results/initial_positions.png>
+Package pdftex.def Info: results/initial_positions.png  used on input line 17.
+(pdftex.def)             Requested size: 345.0pt x 171.76945pt.
+ (./algorithms.py
+consecutive:
+[5] [6 <./results/initial_positions.png>])
+<results/orbits_lf.png, id=41, 1008.1665pt x 427.1157pt>
+File: results/orbits_lf.png Graphic file (type png)
+<use results/orbits_lf.png>
+Package pdftex.def Info: results/orbits_lf.png  used on input line 33.
+(pdftex.def)             Requested size: 345.0pt x 146.1559pt.
+<results/zplane.png, id=42, 738.5994pt x 399.6531pt>
+File: results/zplane.png Graphic file (type png)
+<use results/zplane.png>
+Package pdftex.def Info: results/zplane.png  used on input line 34.
+(pdftex.def)             Requested size: 207.0021pt x 112.00577pt.
+ (./algorithms.py
+consecutive:
+[7] [8 <./results/orbits_lf.png> <./results/zplane.png>])
+<results/orbits_rk4.png, id=52, 1008.1665pt x 427.1157pt>
+File: results/orbits_rk4.png Graphic file (type png)
+<use results/orbits_rk4.png>
+Package pdftex.def Info: results/orbits_rk4.png  used on input line 49.
+(pdftex.def)             Requested size: 345.0pt x 146.1559pt.
+ [9]
+<results/rk4_lf_diff.png, id=56, 744.381pt x 399.6531pt>
+File: results/rk4_lf_diff.png Graphic file (type png)
+<use results/rk4_lf_diff.png>
+Package pdftex.def Info: results/rk4_lf_diff.png  used on input line 60.
+(pdftex.def)             Requested size: 207.0021pt x 111.13373pt.
+) [10 <./results/orbits_rk4.png> <./results/rk4_lf_diff.png>]
+\openout2 = `latex/fourier.aux'.
+
+ (./latex/fourier.tex (./cic.py
+LaTeX Font Info:    Trying to load font information for OML+cmr on input line 2
+1.
+
+(/usr/share/texlive/texmf-dist/tex/latex/base/omlcmr.fd
+File: omlcmr.fd 2019/12/16 v2.5j Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <8> not available
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 21.
+) (./fourier.py
+[11
+
+
+
+]) [12] (./algorithms.py
+consecutive:
+[13])
+<results/density_contrast_slices.png, id=73, 657.657pt x 550.6974pt>
+File: results/density_contrast_slices.png Graphic file (type png)
+<use results/density_contrast_slices.png>
+Package pdftex.def Info: results/density_contrast_slices.png  used on input lin
+e 11.
+(pdftex.def)             Requested size: 276.00105pt x 231.12328pt.
+ [14]
+<results/fft_potential.png, id=77, 665.6067pt x 550.6974pt>
+File: results/fft_potential.png Graphic file (type png)
+<use results/fft_potential.png>
+Package pdftex.def Info: results/fft_potential.png  used on input line 46.
+(pdftex.def)             Requested size: 276.00105pt x 228.3503pt.
+<results/potential_slices.png, id=78, 688.7331pt x 550.6974pt>
+File: results/potential_slices.png Graphic file (type png)
+<use results/potential_slices.png>
+Package pdftex.def Info: results/potential_slices.png  used on input line 55.
+(pdftex.def)             Requested size: 276.00105pt x 220.6868pt.
+ [15 <./results/density_contrast_slices.png>] [16 <./results/fft_potential.png>
+ <./results/potential_slices.png>]) [17]
 \openout2 = `latex/classification.aux'.
 
- (./latex/classification.tex) [6
+ (./latex/classification.tex
+(./results/scaled_features.txt) (./plotting.py
+consecutive:
+[18
 
 
 
-] (./main.aux
-(./latex/orbits.aux) (./latex/fourier.aux) (./latex/classification.aux))
+]) (./classification.py
+consecutive:
+)
+<results/scaled_features_dist.png, id=95, 578.16pt x 578.16pt>
+File: results/scaled_features_dist.png Graphic file (type png)
+<use results/scaled_features_dist.png>
+Package pdftex.def Info: results/scaled_features_dist.png  used on input line 2
+7.
+(pdftex.def)             Requested size: 276.00105pt x 275.99626pt.
+ [19] [20 <./results/scaled_features_dist.png>]
+<results/2d_fit_losses_constant_step.png, id=104, 650.43pt x 289.08pt>
+File: results/2d_fit_losses_constant_step.png Graphic file (type png)
+<use results/2d_fit_losses_constant_step.png>
+Package pdftex.def Info: results/2d_fit_losses_constant_step.png  used on input
+ line 41.
+(pdftex.def)             Requested size: 345.0pt x 153.33517pt.
+<results/2d_fit_losses_line_minim.png, id=105, 650.43pt x 289.08pt>
+File: results/2d_fit_losses_line_minim.png Graphic file (type png)
+<use results/2d_fit_losses_line_minim.png>
+Package pdftex.def Info: results/2d_fit_losses_line_minim.png  used on input li
+ne 48.
+(pdftex.def)             Requested size: 345.0pt x 153.33517pt.
+<results/2d_fit_line_minim_kappa_color.png, id=106, 427.1157pt x 333.1647pt>
+File: results/2d_fit_line_minim_kappa_color.png Graphic file (type png)
+<use results/2d_fit_line_minim_kappa_color.png>
+Package pdftex.def Info: results/2d_fit_line_minim_kappa_color.png  used on inp
+ut line 58.
+(pdftex.def)             Requested size: 165.59853pt x 129.17116pt.
+<results/2d_fit_line_minim_kappa_extended.png, id=107, 427.1157pt x 333.1647pt>
 
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+File: results/2d_fit_line_minim_kappa_extended.png Graphic file (type png)
+<use results/2d_fit_line_minim_kappa_extended.png>
+Package pdftex.def Info: results/2d_fit_line_minim_kappa_extended.png  used on 
+input line 59.
+(pdftex.def)             Requested size: 165.59853pt x 129.17116pt.
+<results/2d_fit_line_minim_kappa_emission_flux.png, id=108, 436.5108pt x 333.16
+47pt>
+File: results/2d_fit_line_minim_kappa_emission_flux.png Graphic file (type png)
 
- ) 
+<use results/2d_fit_line_minim_kappa_emission_flux.png>
+Package pdftex.def Info: results/2d_fit_line_minim_kappa_emission_flux.png  use
+d on input line 60.
+(pdftex.def)             Requested size: 165.59853pt x 126.39038pt.
+<results/2d_fit_line_minim_color_extended.png, id=109, 427.1157pt x 333.1647pt>
+
+File: results/2d_fit_line_minim_color_extended.png Graphic file (type png)
+<use results/2d_fit_line_minim_color_extended.png>
+Package pdftex.def Info: results/2d_fit_line_minim_color_extended.png  used on 
+input line 61.
+(pdftex.def)             Requested size: 165.59853pt x 129.17116pt.
+<results/2d_fit_line_minim_color_emission_flux.png, id=110, 436.5108pt x 333.16
+47pt>
+File: results/2d_fit_line_minim_color_emission_flux.png Graphic file (type png)
+
+<use results/2d_fit_line_minim_color_emission_flux.png>
+Package pdftex.def Info: results/2d_fit_line_minim_color_emission_flux.png  use
+d on input line 62.
+(pdftex.def)             Requested size: 165.59853pt x 126.39038pt.
+<results/2d_fit_line_minim_extended_emission_flux.png, id=111, 436.5108pt x 333
+.1647pt>
+File: results/2d_fit_line_minim_extended_emission_flux.png Graphic file (type p
+ng)
+<use results/2d_fit_line_minim_extended_emission_flux.png>
+Package pdftex.def Info: results/2d_fit_line_minim_extended_emission_flux.png  
+used on input line 63.
+(pdftex.def)             Requested size: 165.59853pt x 126.39038pt.
+) [21 <./results/2d_fit_losses_constant_step.png>] [22 <./results/2d_fit_losses
+_line_minim.png>] [23 <./results/2d_fit_line_minim_kappa_color.png> <./results/
+2d_fit_line_minim_kappa_extended.png> <./results/2d_fit_line_minim_kappa_emissi
+on_flux.png> <./results/2d_fit_line_minim_color_extended.png> <./results/2d_fit
+_line_minim_color_emission_flux.png> <./results/2d_fit_line_minim_extended_emis
+sion_flux.png>] (./main.aux
+(./latex/orbits.aux) (./latex/fourier.aux) (./latex/classification.aux)) ) 
 Here is how much of TeX's memory you used:
- 4013 strings out of 480247
- 59755 string characters out of 5896152
- 610961 words of memory out of 5000000
- 21913 multiletter control sequences out of 15000+600000
- 475792 words of font info for 51 fonts, out of 8000000 for 9000
+ 4431 strings out of 480247
+ 67586 string characters out of 5896152
+ 1236961 words of memory out of 5000000
+ 22291 multiletter control sequences out of 15000+600000
+ 476127 words of font info for 52 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,6n,65p,836b,1310s stack positions out of 5000i,500n,10000p,200000b,80000s
- </home/rens/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm0800.600p
-k></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></us
-r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></usr/share
-/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texli
-ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/
-fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/t
-ype1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
-blic/amsfonts/cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
-/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pf
-b></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
-r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share
-/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texli
-ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on main.pdf (6 pages, 686212 bytes).
+ 60i,18n,65p,1143b,1697s stack positions out of 5000i,500n,10000p,200000b,80000s
+ </ho
+me/rens/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1000.600pk> </ho
+me/rens/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm0800.600pk></usr
+/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx9.pfb></usr/share/texliv
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share/texlive/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/
+cm/cmr5.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.
+pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></us
+r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/share/
+texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texliv
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf
+-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/f
+onts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texmf-dist/fonts/t
+ype1/public/amsfonts/cm/cmtt10.pfb>
+Output written on main.pdf (23 pages, 1321140 bytes).
 PDF statistics:
- 114 PDF objects out of 1000 (max. 8388607)
- 64 compressed objects within 1 object stream
+ 211 PDF objects out of 1000 (max. 8388607)
+ 112 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
- 26 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 86 words of extra memory for PDF output out of 10000 (max. 10000000)
 

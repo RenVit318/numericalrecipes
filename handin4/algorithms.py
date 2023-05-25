@@ -117,10 +117,7 @@ class RungeKutta4():
             self.v[i+1] = self.v[i] + one_sixth*k1v + one_third*k2v + one_third*k3v + one_sixth*k4v   
             self.x[i+1] = self.x[i] + one_sixth*k1x + one_third*k2x + one_third*k3x + one_sixth*k4x 
 
-
-
 # FFT
-
 def dft_recursive(x, inverse):
     """Function to be called recursively by the FFT algorithm to perform the DFT on
     subsets of the array following the Danielson-Lanczos lemma. For speed we make use
@@ -187,8 +184,7 @@ def fft(x, inverse=False):
 
     return x_fft
 
-
-def fft_nd(x, inverse):
+def fft_nd(x, inverse=False):
     """Apply the Fourier transform to mulitdimensional data. This can easily be done by performing
     the FFT algorithm along each axis separately consecutively"""
     dim = len(x.shape)
@@ -205,7 +201,6 @@ def logistic_func(X, theta):
     z = np.dot(theta, X.T)
     sigma = 1./(1.+np.exp(-z)) 
     return sigma
-
 
 def logistic_loss(X, Y, theta, hypothesis_func=logistic_func,
                   return_gradient=False):

@@ -1,5 +1,7 @@
 \section{Solar System Orbits}
 
+\lstinputlisting[caption={Code to collect the positions and velocities of solar system objects and apply the LeapFrog and Runge-Kutta 4 Algorithms.}]{orbits.py}
+
 In this section we will simulate the orbits of the planets in our Solar system. Here the forces between planets are negligible compared to the force between each planet and the sun. The orbit of each planet is therefore well defined by a single equation, which we can easily brute force with an ODE solver. The acceleration of the planet is given by the gravitational force, which is defined as
 
 \begin{equation}
@@ -20,6 +22,8 @@ We get the initial positions and velocities of all 8 solar system planets and th
 
 \subsection{Leapfrog}
 
+\lstinputlisting[caption={LeapFrog Class}, linerange={5-64}]{algorithms.py}
+
 We start by applying the leapfrog algorithm to simulate the orbits. This is the proper method of solving ordinary differential equations for phsyical systems, because it is reversible and therefore able to conserve energy. This is an important factor in making sure the solutions do not diverge to unphysical states. We have implemented the algorithm in a class, given above. The leapfrog algorithm works by kicking the object from positions $x_i$ with velocity $v_{i+1/2}$. However, we are only given $x_0$ and $v_0$. This means that we first have to use a regular ODE solver to find $v_{1/2}$. Here, this is done in the \texttt{\_kickstart} function with a single iteration of Runge-Kutta 4.
 
 We integrate the orbits with a step size $h = 0.5$ days for 200 years, this gives $N = 146100$ steps in total. We show the resulting orbits in Figure \ref{fig:orbits_lf}.
@@ -35,6 +39,8 @@ We integrate the orbits with a step size $h = 0.5$ days for 200 years, this give
 The orbits appear to behave very nicely. As mentioned previously, this algorithm conserves energy. This is visible in the fact that the orbits in the top plot of Figure \ref{fig:orbits_lf} appear to be well defined lines that do not diverge away from or towards the Sun, which would be a violation of energy conservation. This same fact is visible in the bottom plot, the planets all appear to oscilate up and down in the z-plane, but the amplitude of the oscilations is constant. This also indicates the fact that energy conservation is not violated. Finally, this simulation shows that the orbit of Mercury is not entirely constant, but rather shifts around a little bit. This is not per se an inconsistent result, because its orbit remains closed.
 
 \subsection{Runge-Kutta 4}
+
+\lstinputlisting[caption={Runge-Kutta 4 Class}, linerange={67-118}]{algorithms.py}
 
 As an experiment, we also integrate the orbits of the planets given the same initial conditions with a normal ODE solver that does not have the power to preserve energy. Similar to the LeapFrog method above, we also implement the RK-4 method using a class given above. However, this time we do not have to provide the velocities with an initial kick. We use the same step size and number of steps as before, and plot the resulting orbits in Figure \ref{fig:orbits_rk4}
 

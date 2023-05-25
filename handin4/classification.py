@@ -32,41 +32,45 @@ def preprocess_data(fname, plot=False, nbins=None):
         for ax in axs[:,0]:
             ax.set_ylabel('Counts')
         plt.savefig('results/scaled_features_dist.png')
-        plt.show()
 
     return features, labels
 
-def classify(features, labels, lr, minim_type):
+def classify(features, labels, lr, minim_type,
+             p=2):
     # Start with 'simple' classification of two columns using constant step size
     names = [r'$\kappa_{\mathrm{co}}$', 'Color', 'Extended', 'Emission Flux']
+    snames = ['kappa', 'color', 'extended', 'emission_flux'] # names for the savefiles
     fig1, ax1 = plt.subplots(1,1, figsize=(9,4))
 
     for i in range(features.shape[1]):
         for j in range(i+1, features.shape[1]):  
             feats = features[:, [i,j]] # First two columns
+            # Add in the bias
+            feats = np.append(feats, np.ones(feats.shape[0])[:, np.newaxis], axis=1)
             params, loss = logistic_regression(feats, labels, lr=lr, minim_type=minim_type)
 
             # Plot loss curve
-            #if np.dtype(loss) != int:
             ax1.step(np.arange(loss.shape[0]), loss, label=f'{names[i]} + \n{names[j]}')
             
             # Plot data
             fig2, ax2 = plt.subplots(1,1,)
             ax2.scatter(feats[:,0], feats[:,1], s=3, c=labels, cmap='seismic')
             
-            # Make the 'cutoff line's
+            # Make the 'cutoff line'
             xx = np.linspace(np.min(features[:,0]), np.max(features[:,1]))
-            ax2.plot(xx, -params[0]/params[1] * xx, c='black', ls='--', lw=3)
+            ax2.plot(xx, (-params[0]/params[1] * xx) + params[1], c='black', ls='--', lw=3)
             ax2.set_xlabel(names[i])
             ax2.set_ylabel(names[j])
             ax2.set_title(f'Final Loss = {loss[-1]}')
-            fig2.savefig(f'results/2d_fit_{minim_type}_{names[i]}_{names[j]}.png', bbox_inches='tight')
+            ax2.set_xlim(np.percentile(feats[:,0], p), np.percentile(feats[:,0], 100-p))
+            ax2.set_ylim(np.percentile(feats[:,1], p), np.percentile(feats[:,1], 100-p))
+            fig2.savefig(f'results/2d_fit_{minim_type}_{snames[i]}_{snames[j]}.png', bbox_inches='tight')
 
     ax1.set_xlabel('Iteration Number')
     ax1.set_ylabel('Loss')
     ax1.set_title('Loss over Time for 2D Fits')
 
-    # Shrink current axis by 20%
+    # Shrink current axis by 25%
     # https://stackoverflow.com/questions/4700614/how-to-put-the-legend-outside-the-plot
     box = ax1.get_position()
     ax1.set_position([box.x0, box.y0, box.width * 0.75, box.height])
@@ -77,15 +81,16 @@ def classify(features, labels, lr, minim_type):
 def galaxies():    
     set_styles()
     fname = 'galaxy_data.txt'
-    plot = False
+    plot = True
     nbins = 20
 
     lr = 0.1
-    minim_type = 'line_minim'
+    minim_types = ['constant_step', 'line_minim']
     #####
 
     features, labels = preprocess_data(fname, plot=plot, nbins=nbins)
-    classify(features, labels, lr, minim_type)
+    for minim_type in minim_types:
+        classify(features, labels, lr, minim_type)
 
 def main():
     galaxies()

@@ -9,7 +9,6 @@ from plotting import set_styles
 
 from algorithms import LeapFrog, RungeKutta4
 
-
 # TODO update gravity
 def grav_force(r, Rsun, Msun=const.M_sun.value,
                G=const.G.to_value((u.AU**3)*(u.kg**(-1))*(u.d**(-2)))):
@@ -44,7 +43,6 @@ def get_pos_vel(object_names,
         # Feed r_sun into the grav_force function to get the correct coordinates
         acc_func = lambda x, v: grav_force(x, r_sun)
         planets[obj] = LeapFrog(x0, v0, acc_func)
-        #planets[obj] = RungeKutta4(x0, v0, acc_func)
         
         if plot:
             if obj == 'sun':
@@ -157,8 +155,6 @@ def make_orbits(planets, N, h, plot=False,
         fig4.legend(loc='right')
         fig4.savefig('results/orbits_rk4.png', bbox_inches='tight')
 
-       
-
 def solar_system_sim():
     set_styles()
     object_names = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune']
@@ -173,7 +169,6 @@ def solar_system_sim():
 
     planets = get_pos_vel(object_names, plot=plot)
     make_orbits(planets, N, h, plot=plot, compare_to_rk4=compare_to_rk4)    
-
 
 def main():
     solar_system_sim()
