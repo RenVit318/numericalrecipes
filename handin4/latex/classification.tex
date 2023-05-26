@@ -33,6 +33,9 @@ It is immediately noticable that while most values for features 2 and 3 lie arou
 
 \subsection{Two Feature Combinations}
 
+\lstinputlisting[caption={Code for fitting the classification algorithm and computing the F1 score for each two feature combination and both minimization types}, linerange={38-113}]{classification.py}
+\lstinputlisting[caption={Logistic Regresion, Confusion Matrix and F1 Score code}, firstline={197}]{algorithms.py}
+\lstinputlisting[caption={Code for 'smarter' function minimization}]{minimization.py}
 
 We begin by investigating how well the logistic regression algorithm is able to predict the galaxy class if it is only provided with two of the four available features. We do this by running the algorithm by each of the six possible combinations of two features and investigating the resulting loss values. In each case we also include a bias feature consisting of only ones. As an extra test we also look at the differences between using a constant step size $\eta = 0.1$ and using line minimization using golden section search to discover the minimum. We show the resulting loss curves, the evolution of the loss value as a function of iteration, in Figure \ref{fig:losscurve_stepsize} for the learning rate method and in Figure \ref{fig:losscurve_linemini} for the line mininimization method. 
 

@@ -279,6 +279,3 @@ def compute_f1_score(mat):
     precision = mat[1][1] / (mat[1][1] + mat[0][1])
     recall = mat[1][1] / (mat[1][1] + mat[1][0])
     return 2. * (precision * recall) / (precision + recall)
-
-
-
