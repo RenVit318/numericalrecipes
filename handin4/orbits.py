@@ -9,7 +9,6 @@ from plotting import set_styles
 
 from algorithms import LeapFrog, RungeKutta4
 
-# TODO update gravity
 def grav_force(r, Rsun, Msun=const.M_sun.value,
                G=const.G.to_value((u.AU**3)*(u.kg**(-1))*(u.d**(-2)))):
     """Compute the N-D gravitational force acting on an object with mass m1
@@ -17,8 +16,6 @@ def grav_force(r, Rsun, Msun=const.M_sun.value,
     r_diff = r - Rsun
     return - (G * Msun * r_diff) / (np.power(np.linalg.norm(r_diff), 3))
 
-    #return (G * Msun / (r_diff*r_diff)) * (r_diff/np.sum(np.sqrt(r_diff*r_diff)))             
-           
 def get_pos_vel(object_names,
                 time="2021-12-07 10:00",
                 plot=False):
