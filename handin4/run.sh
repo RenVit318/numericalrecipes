@@ -14,6 +14,7 @@ echo 'Running A2: Fourier Forces..'
 python3 fourier.py
 
 echo 'Running A3: Galaxy Classification..'
+wget https://home.strw.leidenuniv.nl/~belcheva/galaxy_data.txt
 python3 classification.py
 
 echo 'Start Making LaTeX PDF..'

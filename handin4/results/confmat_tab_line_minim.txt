@@ -1,6 +1,0 @@
-$\kappa_{\mathrm{co}}$ + Color & 476 & 472 & 28 & 24 & 0.9477911646586344 \\
-$\kappa_{\mathrm{co}}$ + Extended & 439 & 440 & 60 & 61 & 0.8791208791208791 \\
-$\kappa_{\mathrm{co}}$ + Emission Flux & 440 & 438 & 62 & 60 & 0.8777555110220441 \\
-Color + Extended & 390 & 392 & 108 & 110 & 0.7824351297405189 \\
-Color + Emission Flux & 389 & 393 & 107 & 111 & 0.7828685258964143 \\
-Extended + Emission Flux & 370 & 91 & 409 & 130 & 0.2524271844660194
